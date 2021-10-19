@@ -1,0 +1,645 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.23.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>How to Deploy Spark Standalone in Oracle Cloud (OCI) - Oracle Dev.O Tutorials</title>
+<meta name="description" content="A short walkthrough of setting up Spark and Hadoop in your OCI environment.">
+
+
+  <meta name="author" content="Olivier Francois Xavier Perard">
+  
+  <meta property="article:author" content="Olivier Francois Xavier Perard">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Oracle Dev.O Tutorials">
+<meta property="og:title" content="How to Deploy Spark Standalone in Oracle Cloud (OCI)">
+<meta property="og:url" content="https://cool.devo.build/collections/tutorials/how-to-deploy-spark-oci">
+
+
+  <meta property="og:description" content="A short walkthrough of setting up Spark and Hadoop in your OCI environment.">
+
+
+
+  <meta property="og:image" content="https://cool.devo.build/collections/tutorials/assets/apache_spark.png">
+
+
+
+
+  <meta name="twitter:site" content="@groundbreakers">
+  <meta name="twitter:title" content="How to Deploy Spark Standalone in Oracle Cloud (OCI)">
+  <meta name="twitter:description" content="A short walkthrough of setting up Spark and Hadoop in your OCI environment.">
+  <meta name="twitter:url" content="https://cool.devo.build/collections/tutorials/how-to-deploy-spark-oci">
+
+  
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="https://cool.devo.build/collections/tutorials/assets/apache_spark.png">
+    
+  
+
+  
+    <meta name="twitter:creator" content="@olivier_perard">
+  
+
+
+
+  <meta property="article:published_time" content="2021-09-30T01:00:00+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://cool.devo.build/collections/tutorials/how-to-deploy-spark-oci">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://cool.devo.build/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/main.xml" type="application/atom+xml" rel="alternate" title="Oracle Dev.O Tutorials Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+<link rel="icon" href="https://www.oracle.com/asset/web/favicons/favicon-32.png" sizes="32x32">
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead oracle-header oracle-headerv1 oracle-headeradj oracle-headerdev">
+  <div class="masthead__inner-wrap oracle-headerw1">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <div class="oracle-headers1 site-logo">
+          <a class="oracle-logo" href="https://developer.oracle.com/"><span>Oracle</span></a>
+        </div>
+        <div class="u18-title site-title">
+          <a href="/">
+            Oracle Dev.O Tutorials
+            
+          </a>
+        </div>
+
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/use-cases/">Use Cases</a>
+            </li><li class="masthead__menu-item">
+              <a href="/collections/">Collections</a>
+            </li><li class="masthead__menu-item">
+              <a href="/topics/">Topics</a>
+            </li><li class="masthead__menu-item">
+            <a href="https://www.oracle.com/cloud/free/?source=:ow:o:s:nav::DevoGetStarted&intcmp=:ow:o:s:nav::DevoGetStarted">Get Started For Free</a>
+          </li>
+        </ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="https://developer.oracle.com/" itemprop="item"><span itemprop="name">Developer Resource Center</span></a>
+      <meta itemprop="position" content="" />
+    </li>
+    <span class="sep">/</span>
+    
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Dev.O Tutorials</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/collections" itemprop="item"><span itemprop="name">Collections</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/collections/tutorials" itemprop="item"><span itemprop="name">Tutorials</span></a>
+          <meta itemprop="position" content="3" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">How to Deploy Spark Standalone in Oracle Cloud (OCI)</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+
+    <div class="sidebar sticky">
+    <p><strong>Tags:</strong> <span class="tags">
+
+            
+            <a class="animated-link tag" href="/topics/oci">oci</a>
+            <a class="animated-link tag" href="/topics/open-source">open-source</a>
+            <a class="animated-link tag" href="/topics/spark">spark</a>
+            <a class="animated-link tag" href="/topics/java">java</a>
+            <a class="animated-link tag" href="/topics/data-science">data-science</a>
+            </span>
+    </p>
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Olivier Francois Xavier Perard</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>Work to teach how to mix AI technologies with micro-services and parallelizable architectures</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://twitter.com/olivier_perard" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i><span class="label">Twitter</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+        <li>
+          <a href="https://www.linkedin.com/in/olivier-perard" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/operard" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  
+  
+  <p><strong>From this author:</strong>
+    <ul>
+      
+        <li><a href="/collections/tutorials/deploy-cassandra-on-oci">Deploy Cassandra on Oracle Cloud (OCI) Linux VM</a></li>
+      
+        <li><a href="/collections/tutorials/manually-configuring-a-data-science-tenancy">Manually configuring Data Science service on Oracle Cloud Infrastructure</a></li>
+      
+    </ul>
+  
+  </div>
+
+
+  <article class="page has-sidebar has-slides" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="How to Deploy Spark Standalone in Oracle Cloud (OCI)">
+    
+    <meta itemprop="datePublished" content="2021-09-30T01:00:00+00:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">How to Deploy Spark Standalone in Oracle Cloud (OCI)
+</h1>
+          
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="slides-nav"><ul><li class="active" data-target-slide="0"><a href="javascript:cool.slides.goToSlide(0)">Intro</a></li>
+<li data-target-slide="1"><a href="javascript:cool.slides.goToSlide(1)">Prerequisites</a></li>
+<li data-target-slide="2"><a href="javascript:cool.slides.goToSlide(2)">Java Installation</a></li>
+<li data-target-slide="3"><a href="javascript:cool.slides.goToSlide(3)">Spark and Hadoop Setup</a></li>
+<li data-target-slide="4"><a href="javascript:cool.slides.goToSlide(4)">Install PySpark in Python3 environment</a></li>
+<li data-target-slide="5"><a href="javascript:cool.slides.goToSlide(5)">Test your Spark and Hadoop Environment</a></li></ul></nav>
+          </aside>
+        
+
+        <div class="slides" id="slideshow">
+
+  <div class="slide active" id="slide-0">
+
+    <h2 class="slide__title"><span class="slide__num">1</span> Introduction</h2>
+
+    <p>The following walk-through guides you through the steps needed to set up your environment to run Spark and Hadoop in Oracle Cloud Infrastructure.</p>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(1)" class="slides__btn--begin">Begin &raquo;</a></div>
+
+  </div>
+
+  <div class="slide" id="slide-1">
+
+    <h2 class="slide__title"><span class="slide__num">2</span> Prerequisites</h2>
+
+    <p>You have deployed a VM 2.1 or + with Oracle Linux 7.9 (OEL7) in Oracle Cloud Infrastructure (OCI).</p>
+
+    <ul>
+      <li>The installation of Oracle Linux 7.9 is using a JVM by default.</li>
+      <li>You have access to root either directly or via sudo. By default in OCI, you are connected like “opc” user with sudo privilege.</li>
+    </ul>
+
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">    [opc@xxx ~]$</span><span class="w"> </span>java <span class="nt">-version</span>
+<span class="go">    java version "1.8.0_281"
+    Java(TM) SE Runtime Environment (build 1.8.0_281-b09)
+    Java HotSpot(TM) 64-Bit Server VM (build 25.281-b09, mixed mode)
+</span></code></pre></div>    </div>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(0)">&laquo; Back</a> <a href="javascript:cool.slides.goToSlide(2)">Continue &raquo;</a></div>
+
+  </div>
+
+  <div class="slide" id="slide-2">
+
+    <h2 class="slide__title"><span class="slide__num">3</span> Java Installation</h2>
+
+    <p>The install is quite simple. It consists of setting up Java, installing Spark and Hadoop components and libraries. Lets start with setting up the Spark and Hadoop environment.</p>
+
+    <p>Download the last version of JDK 1.8 because Hadoop 2.X is using this Java version.</p>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">rpm -ivh /home/opc/jdk-8u271-linux-x64.rpm
+</span></code></pre></div>    </div>
+
+    <p>Check Java Version.</p>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">java -version
+</span></code></pre></div>    </div>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(1)">&laquo; Back</a> <a href="javascript:cool.slides.goToSlide(3)">Continue &raquo;</a></div>
+
+  </div>
+
+  <div class="slide" id="slide-3">
+
+    <h2 class="slide__title"><span class="slide__num">4</span> Spark and Hadoop Setup</h2>
+
+    <p>The next step is to install Spark and Hadoop environment.</p>
+
+    <p>First, choose the version of Spark and Hadoop you want to install. Then, download the version you want to install:</p>
+
+    <h3 id="download-spark-245-for-hadoop-27">Download Spark 2.4.5 for Hadoop 2.7</h3>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">cd /home/opc
+wget http://apache.uvigo.es/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
+</span></code></pre></div>    </div>
+
+    <h3 id="download-spark-247-for-hadoop-27">Download Spark 2.4.7 for Hadoop 2.7</h3>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">wget http://apache.uvigo.es/spark/spark-2.4.7/spark-2.4.7-bin-hadoop2.7.tgz
+</span></code></pre></div>    </div>
+
+    <h3 id="download-spark-311-for-hadoop-32">Download Spark 3.1.1 for Hadoop 3.2</h3>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">wget http://apache.uvigo.es/spark/spark-3.1.1/spark-3.1.1-bin-hadoop3.2.tgz
+</span></code></pre></div>    </div>
+
+    <h3 id="install-the-spark-and-hadoop-version">Install the Spark and Hadoop Version</h3>
+
+    <p>Install the Spark and Hadoop Version choosen in the directory “/opt”.</p>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">sudo -i
+cd /opt
+tar -zxvf /home/opc/spark-2.4.5-bin-hadoop2.7.tgz
+</span><span class="gp">#</span>or 
+<span class="go">tar -zxvf /home/opc/spark-2.4.7-bin-hadoop2.7.tgz
+</span><span class="gp">#</span>or
+<span class="go">tar -zxvf /home/opc/spark-3.1.1-bin-hadoop3.2.tgz
+</span></code></pre></div>    </div>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(2)">&laquo; Back</a> <a href="javascript:cool.slides.goToSlide(4)">Continue &raquo;</a></div>
+
+  </div>
+
+  <div class="slide" id="slide-4">
+
+    <h2 class="slide__title"><span class="slide__num">5</span> Install PySpark in Python3 environment</h2>
+
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">/opt/Python-3.7.6/bin/pip3 install 'pyspark=2.4.7'
+/opt/Python-3.7.6/bin/pip3 install findspark
+</span></code></pre></div>    </div>
+
+    <p>Next we shall create a virtual environment and enable it.</p>
+
+    <h3 id="modify-your-environment-to-use-this-spark-and-hadoop-version">Modify your environment to use this Spark and Hadoop Version</h3>
+
+    <p>Add to “.bashrc” for the user “opc” the following lines:</p>
+    <div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="w"> </span>Add by %OP%
+<span class="go">export PYTHONHOME=/opt/anaconda3
+</span><span class="gp">export PATH=$</span>PYTHONHOME/bin:<span class="nv">$PYTHONHOME</span>/condabin:<span class="nv">$PATH</span>
+<span class="go">
+</span><span class="gp">#</span><span class="w"> </span>SPARK ENV
+<span class="gp">#</span><span class="nb">export </span><span class="nv">JAVA_HOME</span><span class="o">=</span><span class="si">$(</span>/usr/libexec/java_home<span class="si">)</span>
+<span class="go">export SPARK_HOME=/opt/spark-2.4.5-bin-hadoop2.7
+</span><span class="gp">export PATH=$</span>SPARK_HOME/bin:<span class="nv">$PATH</span>
+<span class="go">export PYSPARK_PYTHON=python3
+
+export PYSPARK_DRIVER_PYTHON=jupyter
+export PYSPARK_DRIVER_PYTHON_OPTS='notebook'
+</span></code></pre></div>    </div>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(3)">&laquo; Back</a> <a href="javascript:cool.slides.goToSlide(5)">Continue &raquo;</a></div>
+
+  </div>
+
+  <div class="slide" id="slide-5">
+
+    <h2 class="slide__title"><span class="slide__num">6</span> Test your Spark and Hadoop Environment</h2>
+
+    <p>If you’re running directly on a virtual machine and have a browser installed it should take you directly into the jupyter environment. Connect to your “<a href="http://xxx.xxx.xxx.xxx:8001/">http://xxx.xxx.xxx.xxx:8001/</a>”.</p>
+
+    <p>And upload the next notebooks:</p>
+
+    <ul>
+      <li><a href="https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test_findSpark.ipynb">Notebook test findspark</a>.</li>
+      <li><a href="https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test%20PySpark.ipynb">Notebook test Pyspark</a>.</li>
+      <li><a href="https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test_PySpark_Mysql.ipynb">Notebook test Pyspark with Mysql</a>.</li>
+    </ul>
+
+    <div class="slide__nav"><a href="javascript:cool.slides.goToSlide(4)">&laquo; Back</a></div>
+
+  </div>
+
+</div>
+
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-09-30T01:00:00+00:00">September 30, 2021</time></p>
+
+
+      </footer>
+
+      
+
+      
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/main.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 Oracle</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="/assets/js/custom.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  
+    <script src="/assets/js/plugins/readmore.min.js"></script>
+  
+
+
+<!-- Start SiteCatalyst code -->
+<script>
+  var s_pageName = "devrel:en-us:";
+  if (typeof(document.title) != "undefined") {
+    var s_pageName = s_pageName + document.title.trim()
+  };
+</script>
+<script src="https://www.oracleimg.com/us/assets/metrics/ora_otn.js"></script>
+<!-- End SiteCatalyst code -->
+
+
+  </body>
+</html>

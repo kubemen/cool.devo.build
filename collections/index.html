@@ -1,0 +1,986 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.23.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Collections - Oracle Dev.O Tutorials</title>
+<meta name="description" content="Cool stuff from Oracle’s Developer Relations team">
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Oracle Dev.O Tutorials">
+<meta property="og:title" content="Collections">
+<meta property="og:url" content="https://cool.devo.build/collections/">
+
+
+  <meta property="og:description" content="Cool stuff from Oracle’s Developer Relations team">
+
+
+
+  <meta property="og:image" content="https://cool.devo.build/">
+
+
+
+
+  <meta name="twitter:site" content="@groundbreakers">
+  <meta name="twitter:title" content="Collections">
+  <meta name="twitter:description" content="Cool stuff from Oracle’s Developer Relations team">
+  <meta name="twitter:url" content="https://cool.devo.build/collections/">
+
+  
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://cool.devo.build/assets/site-logo.png">
+    
+  
+
+  
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cool.devo.build/collections/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://cool.devo.build/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/main.xml" type="application/atom+xml" rel="alternate" title="Oracle Dev.O Tutorials Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+<link rel="icon" href="https://www.oracle.com/asset/web/favicons/favicon-32.png" sizes="32x32">
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--archive">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead oracle-header oracle-headerv1 oracle-headeradj oracle-headerdev">
+  <div class="masthead__inner-wrap oracle-headerw1">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <div class="oracle-headers1 site-logo">
+          <a class="oracle-logo" href="https://developer.oracle.com/"><span>Oracle</span></a>
+        </div>
+        <div class="u18-title site-title">
+          <a href="/">
+            Oracle Dev.O Tutorials
+            
+          </a>
+        </div>
+
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/use-cases/">Use Cases</a>
+            </li><li class="masthead__menu-item">
+              <a href="/collections/">Collections</a>
+            </li><li class="masthead__menu-item">
+              <a href="/topics/">Topics</a>
+            </li><li class="masthead__menu-item">
+            <a href="https://www.oracle.com/cloud/free/?source=:ow:o:s:nav::DevoGetStarted&intcmp=:ow:o:s:nav::DevoGetStarted">Get Started For Free</a>
+          </li>
+        </ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="https://developer.oracle.com/" itemprop="item"><span itemprop="name">Developer Resource Center</span></a>
+      <meta itemprop="position" content="" />
+    </li>
+    <span class="sep">/</span>
+    
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Dev.O Tutorials</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        <li class="current">Collections</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+
+  <div class="archive">
+    
+      <h1 id="page-title" class="page__title">Collections</h1>
+    
+    <section class="collections">
+  <div class="collections__cards cards">
+    
+    
+
+    <a href="/collections/proxima-safe/" class="collections__card card">
+
+
+        <h4>Proxima Safe</h4>
+        
+        
+
+        <figure>
+          
+          <img class="center-cropped" src="/collections/proxima-safe//assets/bread.jpeg">
+          
+        </figure>
+        <p>Joining the Dots in OCI to Build a Stream Analysis Lab.</p>
+
+
+    </a>
+    
+
+    <a href="/collections/tutorials/tf-101/" class="collections__card card">
+
+
+        <h4>Terraform 101</h4>
+        
+        
+
+        <figure>
+          
+          <img class="center-cropped" src="/collections/tutorials/tf-101//assets/terraform-101.png">
+          
+        </figure>
+        <p>Jumpstart your OCI management experience using IaC (specifically Terraform) with this tutorial series.</p>
+
+
+    </a>
+    
+
+    <a href="/collections/tutorials/" class="collections__card card">
+
+
+        <h4>Tutorials</h4>
+        
+        
+
+        <figure>
+          
+          <img class="center-cropped" src="/collections/tutorials//assets/the-whiteboard.jpg">
+          
+        </figure>
+        <p>Build your skillset with tutorials on OCI and Oracle tools.</p>
+
+
+    </a>
+    
+  </div>
+
+</section>
+
+
+<section class="all-collections">
+  <h2>Latest tutorials</h2>
+
+  <div class="all-projects__cards cards">
+    
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-terraform tag-iac tag-devops tag-beginner" data-category="iac opensource" data-tags="open-source terraform iac devops beginner">
+  <header><h4><a class="" href="/collections/tutorials/tf-101/4-variables">Terraform variables</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-14T12:00:00+00:00">Oct 14<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/tf-101/4-variables" style="background-image:url('/collections/tutorials/tf-101/assets/terraform-101.png');"></a>
+    
+    <div class="desc">
+      <p>Learn about how variables are used in Terraform.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/terraform">terraform</a>
+          <a class="animated-link tag" href="/topics/iac">iac</a>
+          <a class="animated-link tag" href="/topics/devops">devops</a>
+          <a class="animated-link tag" href="/topics/beginner">beginner</a>
+          </span>
+          <a class="project" href="/collections/tutorials/tf-101/">Terraform 101</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-terraform tag-iac tag-devops tag-beginner" data-category="iac opensource" data-tags="open-source terraform iac devops beginner">
+  <header><h4><a class="" href="/collections/tutorials/tf-101/3-understanding-terraform-basics">Understanding the basics of Terraform</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-14T08:13:00+00:00">Oct 14<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/tf-101/3-understanding-terraform-basics" style="background-image:url('/collections/tutorials/tf-101/assets/terraform-101.png');"></a>
+    
+    <div class="desc">
+      <p>Let’s go through some of the foundational concepts you should understand when working with Terraform.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/terraform">terraform</a>
+          <a class="animated-link tag" href="/topics/iac">iac</a>
+          <a class="animated-link tag" href="/topics/devops">devops</a>
+          <a class="animated-link tag" href="/topics/beginner">beginner</a>
+          </span>
+          <a class="project" href="/collections/tutorials/tf-101/">Terraform 101</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-open-source tag-kubernetes tag-flask-cloud-shell tag-python" data-category="" data-tags="oci open-source kubernetes flask-cloud-shell python">
+  <header><h4><a class="" href="/collections/tutorials/deploy-flask-app-cloud-shell">How to Deploy a Python Flask Application in a Kubernetes cluster</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-11T01:00:00+00:00">Oct 11<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/deploy-flask-app-cloud-shell" style="background-image:url('/collections/tutorials/assets/flask-shell-diagram.png');"></a>
+    
+    <div class="desc">
+      <p>Setting up a Kubernetes cluster using Oracle Cloud, and deploying a Python application with Flask framework using Cloud Shell.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/kubernetes">kubernetes</a>
+          <a class="animated-link tag" href="/topics/flask-cloud-shell">flask-cloud-shell</a>
+          <a class="animated-link tag" href="/topics/python">python</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-terraform tag-iac tag-devops tag-beginner" data-category="iac opensource" data-tags="open-source terraform iac devops beginner">
+  <header><h4><a class="" href="/collections/tutorials/tf-101/2-experiencing-terraform">Experiencing Terraform</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-08T08:15:00+00:00">Oct 8<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/tf-101/2-experiencing-terraform" style="background-image:url('/collections/tutorials/tf-101/assets/terraform-101.png');"></a>
+    
+    <div class="desc">
+      <p>Experience the power of Terraform through a short project.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/terraform">terraform</a>
+          <a class="animated-link tag" href="/topics/iac">iac</a>
+          <a class="animated-link tag" href="/topics/devops">devops</a>
+          <a class="animated-link tag" href="/topics/beginner">beginner</a>
+          </span>
+          <a class="project" href="/collections/tutorials/tf-101/">Terraform 101</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-get-started tag-jupyter tag-python tag-data-science tag-machine-learning tag-open-source" data-category="ai-ml" data-tags="oci get-started jupyter python data-science machine-learning open-source">
+  <header><h4><a class="" href="/collections/tutorials/install-jupyter-lab-on-oci">Install Jupyter Lab in OCI</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-07T14:27:00+00:00">Oct 7<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail placeholder ph-green" href="/collections/tutorials/install-jupyter-lab-on-oci">I</a>
+    
+    <div class="desc">
+      <p>This tutorial will guide you through setting up your environment to run Jupyter Lab on Oracle Cloud Infrastructure.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/get-started">get-started</a>
+          <a class="animated-link tag" href="/topics/jupyter">jupyter</a>
+          <a class="animated-link tag" href="/topics/python">python</a>
+          <a class="animated-link tag" href="/topics/data-science">data-science</a>
+          <a class="animated-link tag" href="/topics/machine-learning">machine-learning</a>
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-data-management tag-front-end tag-mysql tag-oci tag-orm" data-category="cloudapps" data-tags="data-management front-end mysql oci orm">
+  <header><h4><a class="" href="/collections/tutorials/get-started-with-lamp-on-oci">Get Started with your own LAMP stack application on Oracle Cloud</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-10-01T09:18:00+00:00">Oct 1<span>st</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/get-started-with-lamp-on-oci" style="background-image:url('/collections/tutorials/assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-12-19.png');"></a>
+    
+    <div class="desc">
+      <p>Build Move &amp; Modernize Apps and Hybrid Solutions, DevOps and Automation on OCI.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/data-management">data-management</a>
+          <a class="animated-link tag" href="/topics/front-end">front-end</a>
+          <a class="animated-link tag" href="/topics/mysql">mysql</a>
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/orm">orm</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-OCI tag-open-source tag-nodejs tag-front-end tag-kubernetes" data-category="" data-tags="OCI open-source nodejs front-end kubernetes">
+  <header><h4><a class="" href="/collections/tutorials/deploy-a-node-express-application">Kubernetes - Deploy a Node Express Application</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-30T01:00:00+00:00">Sep 30<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/deploy-a-node-express-application" style="background-image:url('/collections/tutorials/assets/deploy-a-node-express-application-Node-K8s-diagram.png');"></a>
+    
+    <div class="desc">
+      <p>How to deploy a Node Express application to a Kubernetes cluster on OCI.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">OCI</a>
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/nodejs">nodejs</a>
+          <a class="animated-link tag" href="/topics/front-end">front-end</a>
+          <a class="animated-link tag" href="/topics/kubernetes">kubernetes</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-open-source tag-spark tag-java tag-data-science" data-category="" data-tags="oci open-source spark java data-science">
+  <header><h4><a class="" href="/collections/tutorials/how-to-deploy-spark-oci">How to Deploy Spark Standalone in Oracle Cloud (OCI)</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-30T01:00:00+00:00">Sep 30<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/how-to-deploy-spark-oci" style="background-image:url('/collections/tutorials/assets/apache_spark.png');"></a>
+    
+    <div class="desc">
+      <p>A short walkthrough of setting up Spark and Hadoop in your OCI environment.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/spark">spark</a>
+          <a class="animated-link tag" href="/topics/java">java</a>
+          <a class="animated-link tag" href="/topics/data-science">data-science</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-terraform tag-iac tag-devops tag-beginner" data-category="iac opensource" data-tags="open-source terraform iac devops beginner">
+  <header><h4><a class="" href="/collections/tutorials/tf-101/1-why-iac">Why Infrastructure as Code?</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-28T08:13:00+00:00">Sep 28<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/tf-101/1-why-iac" style="background-image:url('/collections/tutorials/tf-101/assets/terraform-101.png');"></a>
+    
+    <div class="desc">
+      <p>Heard about Infrastructure as Code (IaC) but not sure what it’s about or why you should care?  This tutorial’s for you!</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/terraform">terraform</a>
+          <a class="animated-link tag" href="/topics/iac">iac</a>
+          <a class="animated-link tag" href="/topics/devops">devops</a>
+          <a class="animated-link tag" href="/topics/beginner">beginner</a>
+          </span>
+          <a class="project" href="/collections/tutorials/tf-101/">Terraform 101</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-oke tag-kubernetes tag-terraform tag-devops" data-category="cloudapps opensource" data-tags="open-source oke kubernetes terraform devops">
+  <header><h4><a class="" href="/collections/tutorials/deploying-the-argo-project-on-oke">Deploying the Argo CD on Oracle Container Engine for Kubernetes (OKE)</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-22T15:30:00+00:00">Sep 22<span>nd</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/deploying-the-argo-project-on-oke" style="background-image:url('/collections/tutorials/assets/argo-icon-color-800.png');"></a>
+    
+    <div class="desc">
+      <p>How to deploy the Argo CD on an OKE cluster.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/oke">oke</a>
+          <a class="animated-link tag" href="/topics/kubernetes">kubernetes</a>
+          <a class="animated-link tag" href="/topics/terraform">terraform</a>
+          <a class="animated-link tag" href="/topics/devops">devops</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-open-source tag-oci tag-always-free tag-nodejs tag-javascript tag-typescript tag-front-end" data-category="frameworks cloudapps" data-tags="open-source oci always-free nodejs javascript typescript front-end">
+  <header><h4><a class="" href="/collections/tutorials/get-started-with-node-express-on-oracle-cloud">Install Node Express on an Oracle Linux Instance</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-22T13:47:00+00:00">Sep 22<span>nd</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/get-started-with-node-express-on-oracle-cloud" style="background-image:url('/collections/tutorials/assets/get-started-with-node-express-on-oracle-cloud-Node_Diagram.png');"></a>
+    
+    <div class="desc">
+      <p>Use an Oracle Cloud Infrastructure Free Tier account to set up an Oracle Linux compute instance, install a Node Express application and access your new app from the internet.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/open-source">open-source</a>
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/always-free">always-free</a>
+          <a class="animated-link tag" href="/topics/nodejs">nodejs</a>
+          <a class="animated-link tag" href="/topics/javascript">javascript</a>
+          <a class="animated-link tag" href="/topics/typescript">typescript</a>
+          <a class="animated-link tag" href="/topics/front-end">front-end</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-data-science tag-nodejs tag-javascript tag-typescript" data-category="am-ml" data-tags="oci data-science nodejs javascript typescript">
+  <header><h4><a class="" href="/collections/tutorials/manually-configuring-a-data-science-tenancy">Manually configuring Data Science service on Oracle Cloud Infrastructure</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-22T12:00:00+00:00">Sep 22<span>nd</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/manually-configuring-a-data-science-tenancy" style="background-image:url('/collections/tutorials/assets/manually-configuring-a-data-science-tenancy-groups.png');"></a>
+    
+    <div class="desc">
+      <p>Configure your tenancy for Data Science and test creating a notebook session.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/data-science">data-science</a>
+          <a class="animated-link tag" href="/topics/nodejs">nodejs</a>
+          <a class="animated-link tag" href="/topics/javascript">javascript</a>
+          <a class="animated-link tag" href="/topics/typescript">typescript</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-python tag-jupyter tag-back-end" data-category="cloudapps" data-tags="oci python jupyter back-end">
+  <header><h4><a class="" href="/collections/tutorials/deploy-cassandra-on-oci">Deploy Cassandra on Oracle Cloud (OCI) Linux VM</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-21T12:00:00+00:00">Sep 21<span>st</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail placeholder ph-red" href="/collections/tutorials/deploy-cassandra-on-oci">D</a>
+    
+    <div class="desc">
+      <p>Set up your environment to run Cassandra in Oracle Cloud Infrastructure.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/python">python</a>
+          <a class="animated-link tag" href="/topics/jupyter">jupyter</a>
+          <a class="animated-link tag" href="/topics/back-end">back-end</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-java tag-always-free tag-back-end tag-spring" data-category="java modernize" data-tags="oci java always-free back-end spring">
+  <header><h4><a class="" href="/collections/tutorials/install-spring-boot-on-an-oracle-instance">Install Spring Boot on an compute instance on Oracle Cloud</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-09-20T15:30:00+00:00">Sep 20<span>th</span>, 2021</time></span>
+      
+      
+      <span class="updated">Updated: <time datetime="2021-09-22T18:10:56-05:00">Sep 22<span>nd</span>, 2021</time></span>
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/install-spring-boot-on-an-oracle-instance" style="background-image:url('/collections/tutorials/assets/install-spring-boot-on-an-oracle-instance-Spring_Diagram.png');"></a>
+    
+    <div class="desc">
+      <p>Use an Oracle Cloud Infrastructure Free Tier account to set up an Oracle Linux compute instance, install a Spring Boot application, set up a virtual network, and access your new app from the internet.</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/java">java</a>
+          <a class="animated-link tag" href="/topics/always-free">always-free</a>
+          <a class="animated-link tag" href="/topics/back-end">back-end</a>
+          <a class="animated-link tag" href="/topics/spring">spring</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-iot tag-streaming tag-serverless tag-rpi tag-full-stack" data-category="arvr" data-tags="oci iot streaming serverless rpi full-stack">
+  <header><h4><a class="" href="/collections/proxima-safe/proxima-overview">Mr. Stark's Briefcase and ProximaSafe</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-08-20T08:00:00+00:00">Aug 20<span>th</span>, 2021</time></span>
+      
+      
+      <span class="updated">Updated: <time datetime="2021-09-01T12:00:00+00:00">Sep 1<span>st</span>, 2021</time></span>
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/proxima-safe/proxima-overview" style="background-image:url('/collections/proxima-safe/assets/bread.jpeg');"></a>
+    
+    <div class="desc">
+      
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/iot">iot</a>
+          <a class="animated-link tag" href="/topics/streaming">streaming</a>
+          <a class="animated-link tag" href="/topics/serverless">serverless</a>
+          <a class="animated-link tag" href="/topics/rpi">rpi</a>
+          <a class="animated-link tag" href="/topics/full-stack">full-stack</a>
+          </span>
+          <a class="project" href="/collections/proxima-safe/">Proxima Safe</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+          
+          
+
+<div class="card all-projects__card tag-oci tag-iot tag-apex tag-always-free tag-architect tag-community" data-category="personal" data-tags="oci iot apex always-free architect community">
+  <header><h4><a class="" href="/collections/tutorials/learning-languages-with-oracle-cloud">Build Your Own Language Translator on Oracle Cloud</a></h4>
+    <div class="date">
+      
+      <span class="published"><time datetime="2021-08-15T12:00:00+00:00">Aug 15<span>th</span>, 2021</time></span>
+      
+      
+    </div>
+  </header>
+    
+    
+    
+    <a class="thumbnail" href="/collections/tutorials/learning-languages-with-oracle-cloud" style="background-image:url('/collections/tutorials/assets/the-whiteboard.jpg');"></a>
+    
+    <div class="desc">
+      <p>Using Oracle Cloud to learn a to speak a new language</p>
+
+
+      <footer class="meta">
+          <span class="tags">
+          
+          <a class="animated-link tag" href="/topics/oci">oci</a>
+          <a class="animated-link tag" href="/topics/iot">iot</a>
+          <a class="animated-link tag" href="/topics/apex">apex</a>
+          <a class="animated-link tag" href="/topics/always-free">always-free</a>
+          <a class="animated-link tag" href="/topics/architect">architect</a>
+          <a class="animated-link tag" href="/topics/community">community</a>
+          </span>
+          <a class="project" href="/collections/tutorials/">Tutorials</a>
+      </footer>
+    </div>
+</div>
+
+
+
+      
+  </div>
+
+</section>
+
+  </div>
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/main.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 Oracle</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="/assets/js/custom.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  
+    <script src="/assets/js/plugins/readmore.min.js"></script>
+  
+
+
+<!-- Start SiteCatalyst code -->
+<script>
+  var s_pageName = "devrel:en-us:";
+  if (typeof(document.title) != "undefined") {
+    var s_pageName = s_pageName + document.title.trim()
+  };
+</script>
+<script src="https://www.oracleimg.com/us/assets/metrics/ora_otn.js"></script>
+<!-- End SiteCatalyst code -->
+
+
+  </body>
+</html>

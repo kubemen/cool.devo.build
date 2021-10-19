@@ -1,0 +1,570 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.23.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Why Infrastructure as Code? - Oracle Dev.O Tutorials</title>
+<meta name="description" content="Heard about Infrastructure as Code (IaC) but not sure what it’s about or why you should care?  This tutorial’s for you!">
+
+
+  <meta name="author" content="Tim Clegg">
+  
+  <meta property="article:author" content="Tim Clegg">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Oracle Dev.O Tutorials">
+<meta property="og:title" content="Why Infrastructure as Code?">
+<meta property="og:url" content="https://cool.devo.build/collections/tutorials/tf-101/1-why-iac">
+
+
+  <meta property="og:description" content="Heard about Infrastructure as Code (IaC) but not sure what it’s about or why you should care?  This tutorial’s for you!">
+
+
+
+  <meta property="og:image" content="https://cool.devo.build/collections/tutorials/tf-101/assets/terraform-101.png">
+
+
+
+
+  <meta name="twitter:site" content="@groundbreakers">
+  <meta name="twitter:title" content="Why Infrastructure as Code?">
+  <meta name="twitter:description" content="Heard about Infrastructure as Code (IaC) but not sure what it’s about or why you should care?  This tutorial’s for you!">
+  <meta name="twitter:url" content="https://cool.devo.build/collections/tutorials/tf-101/1-why-iac">
+
+  
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="https://cool.devo.build/collections/tutorials/tf-101/assets/terraform-101.png">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-09-28T08:13:00+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://cool.devo.build/collections/tutorials/tf-101/1-why-iac">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "https://cool.devo.build/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/main.xml" type="application/atom+xml" rel="alternate" title="Oracle Dev.O Tutorials Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+<link rel="icon" href="https://www.oracle.com/asset/web/favicons/favicon-32.png" sizes="32x32">
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead oracle-header oracle-headerv1 oracle-headeradj oracle-headerdev">
+  <div class="masthead__inner-wrap oracle-headerw1">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        <div class="oracle-headers1 site-logo">
+          <a class="oracle-logo" href="https://developer.oracle.com/"><span>Oracle</span></a>
+        </div>
+        <div class="u18-title site-title">
+          <a href="/">
+            Oracle Dev.O Tutorials
+            
+          </a>
+        </div>
+
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/use-cases/">Use Cases</a>
+            </li><li class="masthead__menu-item">
+              <a href="/collections/">Collections</a>
+            </li><li class="masthead__menu-item">
+              <a href="/topics/">Topics</a>
+            </li><li class="masthead__menu-item">
+            <a href="https://www.oracle.com/cloud/free/?source=:ow:o:s:nav::DevoGetStarted&intcmp=:ow:o:s:nav::DevoGetStarted">Get Started For Free</a>
+          </li>
+        </ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="https://developer.oracle.com/" itemprop="item"><span itemprop="name">Developer Resource Center</span></a>
+      <meta itemprop="position" content="" />
+    </li>
+    <span class="sep">/</span>
+    
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/" itemprop="item"><span itemprop="name">Dev.O Tutorials</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/collections" itemprop="item"><span itemprop="name">Collections</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/collections/tutorials" itemprop="item"><span itemprop="name">Tutorials</span></a>
+          <meta itemprop="position" content="3" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/collections/tutorials/tf-101" itemprop="item"><span itemprop="name">Tf 101</span></a>
+          <meta itemprop="position" content="4" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">Why Infrastructure as Code?</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+
+    <div class="sidebar sticky">
+    <p><strong>Tags:</strong> <span class="tags">
+
+            
+            <a class="animated-link tag" href="/topics/open-source">open-source</a>
+            <a class="animated-link tag" href="/topics/terraform">terraform</a>
+            <a class="animated-link tag" href="/topics/iac">iac</a>
+            <a class="animated-link tag" href="/topics/devops">devops</a>
+            <a class="animated-link tag" href="/topics/beginner">beginner</a>
+            </span>
+    </p>
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Tim Clegg</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>Code. Share. Secure. Innovate. Automate. Educate.</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://www.linkedin.com/in/https://www.linkedin.com/in/timothy-clegg/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span class="label">LinkedIn</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+        <li>
+          <a href="https://github.com/timclegg" itemprop="sameAs" rel="nofollow noopener noreferrer">
+            <i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span>
+          </a>
+        </li>
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  
+  
+  <p><strong>From this author:</strong>
+    <ul>
+      
+        <li><a href="/collections/tutorials/tf-101/2-experiencing-terraform">Experiencing Terraform</a></li>
+      
+        <li><a href="/collections/tutorials/tf-101/3-understanding-terraform-basics">Understanding the basics of Terraform</a></li>
+      
+        <li><a href="/collections/tutorials/tf-101/4-variables">Terraform variables</a></li>
+      
+        <li><a href="/collections/tutorials/tf-101/">Terraform 101</a></li>
+      
+    </ul>
+  
+  </div>
+
+
+  <article class="page has-sidebar has-toc" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Why Infrastructure as Code?">
+    
+    <meta itemprop="datePublished" content="2021-09-28T08:13:00+00:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Why Infrastructure as Code?
+</h1>
+          
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#so-many-ways-to-manage">So Many Ways to Manage</a><ul><li><a href="#guis">GUIs</a></li><li><a href="#clis">CLIs</a></li><li><a href="#apis">APIs</a></li><li><a href="#iac-tools">IaC Tools</a></li></ul></li></ul>
+
+            </nav>
+          </aside>
+        
+
+        <figure class="aligncenter">
+              <picture>
+                  <source srcset="assets/terraform-101.png 1x" />
+                  <img loading="lazy" width="400" height="400" src="assets/terraform-101.png" data-original="assets/terraform-101.png" data-at2x="assets/terraform-101@2x.png" title="Terraform 101" alt="Terraform 101 Tutorial Series" />
+              </picture>
+              <figcaption>Terraform 101</figcaption>
+            </figure>
+
+<p>Terraform.  Infrastructure-as-Code (IaC).  Automation.  DevOps.  DevSecOps.  So many buzz words are floating around… what’s the big deal anyway?  There are lots of different ways to manage IT resources and cloud infrastructure.  What makes Terraform so great?  Why should you care about IaC?  IaC might not be for everyone, but it is for <em>almost</em> everyone.</p>
+
+<h2 id="so-many-ways-to-manage">So Many Ways to Manage</h2>
+
+<p>Let’s start with the basics.  When there are IT resources to manage, what are some of our common options?</p>
+
+<ul>
+  <li>GUI (aka Console)</li>
+  <li>Command-Line Interface (CLI)</li>
+  <li>API</li>
+  <li>IaC tools</li>
+</ul>
+
+<h3 id="guis">GUIs</h3>
+
+<p>Most of us start with the GUI.  In Oracle Cloud Infrastructure (OCI) this is the <a href="https://www.oracle.com/cloud/sign-in.html">OCI Console</a>.  GUIs are typically pretty fancy, fun, and easy to use.  While they can be entertaining and great for initially learning a system/platform, they’re not always the most scalable or efficient.  UIs require time and manual user intervention (unless you’re using something to automate the pointing-and-clicking, such as <a href="https://www.selenium.dev">Selenium</a>, but that’s a pretty niche edge case).  Things only “work” when someone’s there to click a button.  It’s difficult (read: <em>impossible</em>) to rapidly manage resources using a UI.  Just the time it takes to point-and-click, plus wait for the browser to update… it’s not super fast.</p>
+
+<p>Another downside to consider with GUIs is that it’s a bit more difficult to roll back should something go sideways.  Rolling back typically involves lots of pointing-and-clicking, undoing the changes that were previously made.  More time and human involvement.  Yeck.  Great for learning and playing around, but certainly not ideal for maintaining anything beyond a lab/sandbox environment.</p>
+
+<h3 id="clis">CLIs</h3>
+
+<p>CLIs are marginally better than a GUI.  Instead of pointing-and-clicking, commands are issued.  CLIs are really a text user interface.  Most CLIs allow for running “headless”, meaning they do not require user input (all input can be provided at runtime).  One benefit here is that it’s easier to use CLIs with automated workflows.  It’s a step in the right direction.  Unless there’s some sort of scripting (shell scripts, Ruby, Python, etc.) used, it’s impossible to embed any sort of logic when using CLIs.  This means that it’s great to send a single command (or even a string of commands), however it can be difficult to maintain a high level of assurance when using CLIs (without more involved scripting logic being used with the CLI).</p>
+
+<h3 id="apis">APIs</h3>
+
+<p>Who doesn’t love APIs?  At the end of the day, almost everything interacts with the underlying APIs.  Most GUIs, CLIs, and even IaC tools interact with APIs to do what they do.  Whether you use curl, <a href="https://www.postman.com">Postman</a>, <a href="https://paw.cloud">Paw</a>, or other tools, you’re typically interacting with a single API endpoint.  There’s still an inherent lack of logic (unless you use some sort of scripting/application to add this).</p>
+
+<p>Many of us have written small scripts/apps that interact with APIs to achieve certain outcomes.  This is terrific, but it’s pretty manually intensive to create.  For many of us, it takes a short bit to custom-build a script/app for each type of management need.  While this gives an extreme amount of customizability (the sky’s the limit with what you can do), it’s really not practical or scalable.</p>
+
+<p>All cloud providers present an API for managing the platform.  OCI is no exception, providing a terrific <a href="https://docs.oracle.com/en-us/iaas/api/">API interface</a> for developers and users to utilize when interacting with OCI.  It’s certainly one option.  There are other tools such as <a href="https://www.upbound.io">Upbound</a> that offer a great twist for having a single interface managing multiple backend interfaces.</p>
+
+<h3 id="iac-tools">IaC Tools</h3>
+
+<p>These are tools that are designed from the ground-up to manage infrastructure resources using code.  Resources are defined in code, with the tool itself providing the necessary structure and logic to quickly and easily build a definition of what you need/want an environment to be.  The basic “scaffolding” (logic elements, API interactions, etc.) are all abstracted, allowing you to focus on describing the resources you need/want to exist in the environment.</p>
+
+<p>This is by far one of the easiest and fastest ways to build and maintain cloud environments.  This isn’t limited to cloud - on-premesis resources can often be managed with IaC tools.  Are you using multiple cloud providers?  Even more reason to utilize IaC in managing your IT infrastructure.</p>
+
+<p>With IaC, we’re often using git on the back-end, allowing us to get a great history of changes (which can also allow for easy and rapid rollbacks).  Using git for storing the code definitions, we’re able to use pretty standard processes and tools to monitor/approve/manage changes before they’re made.  Whether using policy-as-code (such as <a href="https://www.openpolicyagent.org">Open Policy Agent</a>, with implementations such as <a href="https://github.com/oracle-devrel/oci-pac-opa">Policy-as-Code on OCI using Open Policy Agent</a>) or a manual pull request (PR)/merge request (MR) review process, you can have a really solid review/approval/compliance mechanism (not to mention yet another audit trail that’s separate from the cloud/platform itself).</p>
+
+<p>One of the most common and popular IaC tools is <a href="https://www.terraform.io">HashiCorp Terraform</a>, with other tools (such as <a href="https://www.pulumi.com">Pulumi</a>) also being available.  The end goal with these tools is to manage infrastructure programmatically.</p>
+
+<p>Some like to use tools that are predominantly in the realm of configuration management (such as <a href="https://www.ansible.com">Ansible</a>, <a href="https://www.chef.io">Chef</a>/<a href="https://cinc.sh">Cinc</a>, etc.  These are certainly options for managing infrastructure, but you may be better off with tools that focus on <em>infrastructure management</em> (and less about <em>configuration management</em>).  OCI is no exception in supporting many of these different platforms.</p>
+
+<p>In the rest of this series, we’re going to target using Terraform to manage OCI infrastructure.  Why Terraform?  It’s fairly mature at this point, widely adopted and has support for a wide variety of platforms.  Many cloud platforms (including OCI) and IT systems support using Terraform to manage resources.  There are plenty of examples, platforms and strong user support for it, making it an ideal tool.  Terraform is targeted at managing infrastructure, not so much the configuration management side of things.  And it’s super powerful when combined with a traditional configuration management tool like Ansible.</p>
+
+<p>This series will take you through how to harness the power of infrastructure-as-code (IaC) in your environment.  If this is your first time using Terraform, you’re a bit rusty, or you’re just looking to fill any potential gaps in your knowledge, this should be a worthwhile time investment.  It’s fairly short, but will take you through the basics of how Terraform works, then into an actual working example.  During the journey, you’ll find several key resources which you’ll find invaluable as you continue to work with Terraform to manage your OCI environment.</p>
+
+<p>A picture is worth a thousand words.  Going through this tutorial, you’ll be able to better understand why IaC is so cool and has gained so much traction.  You’ll also learn how to harness IaC to improve the efficiency of managing your environment, and that alone is worth the time.</p>
+
+<p>Until our next lesson, happy coding!  Take a look at the <a href="2-experiencing-terraform">next lesson</a> to go through a very quick experience in using Terraform.  From there we’ll dive into several aspects of how Terraform works.</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-09-28T08:13:00+00:00">September 28, 2021</time></p>
+
+
+      </footer>
+
+      
+
+      
+
+    </div>
+
+    
+  </article>
+
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+
+    
+      <li><a href="/main.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2021 Oracle</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="/assets/js/custom.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+  
+    <script src="/assets/js/plugins/readmore.min.js"></script>
+  
+
+
+<!-- Start SiteCatalyst code -->
+<script>
+  var s_pageName = "devrel:en-us:";
+  if (typeof(document.title) != "undefined") {
+    var s_pageName = s_pageName + document.title.trim()
+  };
+</script>
+<script src="https://www.oracleimg.com/us/assets/metrics/ora_otn.js"></script>
+<!-- End SiteCatalyst code -->
+
+
+  </body>
+</html>

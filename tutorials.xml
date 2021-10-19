@@ -1,0 +1,3419 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="https://cool.devo.build/tutorials.xml" rel="self" type="application/atom+xml" /><link href="https://cool.devo.build/" rel="alternate" type="text/html" /><updated>2021-10-19T20:51:46+00:00</updated><id>https://cool.devo.build/tutorials.xml</id><title type="html">Oracle Dev.O Tutorials | Pages</title><subtitle>Cool stuff from Oracle's Developer Relations team</subtitle><author><name>Oracle Developer Community</name></author><entry><title type="html">Terraform variables</title><link href="https://cool.devo.build/collections/tutorials/tf-101/4-variables" rel="alternate" type="text/html" title="Terraform variables" /><published>2021-10-14T12:00:00+00:00</published><updated>2021-10-14T12:00:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/tf-101/4-variables">This lesson will take a deeper look at Terraform variabales.  You've already had a little bit of exposure to them in the [Experiencing Terraform](2-experiencing-terraform) tutorial, as well as a brief summary in the [Understanding Terraform Concepts](3-understanding-terraform) tutorial.  Let's dive in and take a deeper look at what these are and how they're used.
+
+## Why use variables?
+
+Variables provide a way to easily decouple a value and its reference from your Terraform code.  A topology may be defined, but the specifics are given programmatically (or manually).  Writing parameterized Terraform code (using variables for many of the customizable values), means that as an environment changes new values for the variables may be provided without requiring any modification to the underlying Terraform code.
+
+Here are some common use-cases for parameterizing code:
+
+*	Multiple deployments of the same topology.  This could be for deploying separate development, staging and production environments that share identical topologies (but have unique names, compartments, CIDR blocks, etc.).
+*	Passing secret/sensitive data in via variables.  Rather than hard-coding credentials, keys and other sensitive data in the Terraform code, this can be passed via variables.
+*	Writing extensible modules in Terraform, where variables are used as inputs to the module, determining its behavior and/or setting resource attributes.
+
+&gt; **Warning:** NEVER commit secrets, credentials, keys and any other sensitive data to a git repo!
+{:.alert}
+
+## Types of variables
+
+There are two kinds of variables:
+
+* Input variables (variables)
+* Local values (locals)
+
+### Input variables (variables)
+
+Most Terraform projects use variables in one way or another.  Variables are very common, and for good reason.  Variables are accessible within the entire project (or module, if you're building projects made of one or more modules).
+
+### Local values (locals)
+
+There's another kind of variable called a local variable (aka locals) which is not accessible to your entire project, but is limited to the context of a single Terraform file.  This means that if you define a local variable in a particular Terraform file, it will only be available to code within that same file (but not to code in other Terraform files).
+
+## Getting the contents of a variable
+
+To use a variable, prepend `var.` at the beginning of the variable name.  Take for example the `var.tenancy_ocid` used in the following VCN resource block:
+
+```terraform
+resource oci_core_vcn tf_101 {
+  cidr_block     = &quot;192.168.1.0/24&quot;
+  compartment_id = var.tenancy_ocid
+  display_name   = &quot;tf-101&quot;
+  dns_label      = &quot;tf101&quot;
+}
+```
+
+If this looks familiar, it should - it's borrowed from the [Experiencing Terraform](2-experiencing-terraform) tutorial!  This is how the `tenancy_ocid` variable is referenced (read and used).
+
+### Getting the contents of a local
+
+To use a local (variable), simply prepend the local variable name with `local`.  Here's an example:
+
+```terraform
+resource oci_core_vcn tf_101 {
+  cidr_block     = local.cidr
+  compartment_id = var.tenancy_ocid
+  display_name   = &quot;tf-101&quot;
+  dns_label      = &quot;tf101&quot;
+}
+```
+
+The above example is setting the `cidr_block` attribute to whatever is in the `cidr` local.
+
+## Setting variable values
+
+There are multiple ways to set the values of a variable.  Terraform uses the following order of precedence when setting the value of a variable (listed from the highest to lowest priority):
+
+1.	CLI arguments (-var and -var-file CLI parameters)
+2.	*.auto.tfvars
+3.	terraform.tfvars
+4.	Environment variables
+
+### Setting local values (locals)
+
+Local values are a little different than regular variables (which we'll be looking at in the rest of this section).  Locals (aka local values) are set in the Terraform code itself.  A benefit of locals is --- because they're set within the Terraform code --- they can be computed programmatically, granting the ability to use Terraform functions, reference to other variables, locals, and resources.
+
+Here's an example of how locals are defined.
+
+```terraform
+locals {
+  comp_id = len(var.compartment_id) &gt; 0 ? var.compartment_id : &quot;abcd.1234&quot;
+}
+```
+
+The above example is just fictitious (and not even the most efficient method of doing this), but gives you an idea about how you'd set the `comp_id` local (variable).  Locals are defined within a plural `locals` block, but when referenced, are singular (`local.comp_id`).
+
+### Via the command-line interface
+
+Terraform supports many command-line parameters, one of which is the `-var` parameter which allows you to set the value of a variable when you run Terraform.  Here's an example of how you might set the `compartment_id` variable using the command-line.
+
+```console
+$ terraform plan -var 'compartment_id=abcd.1234'
+```
+
+Or alternatively, you can use the following formatting.
+
+```console
+$ terraform plan -var=&quot;compartment_id=abcd.1234&quot;
+```
+
+You can set one or more variables using this technique.  This is one way to set variables, but it's a bit tedious because it can result in a really long command when running Terraform (if there are a lot of variables being set).  This would need to be used every time you want to run Terraform!
+
+### Variable files
+
+Files ending in `.tfvars` can be used to set the value of variables.  You can tell Terraform which files to read at run-time with the `-var-file` parameter or you can let it auto-load files (based on their filename).
+
+If the `terraform.tfvars` file exists in the working directory, Terraform will read it and set the variable values that are given there.  Here's a sample `terraform.tfvars` file:
+
+```terraform
+compartment_id   = &quot;&lt;your_compartment_OCID_here&gt;&quot;
+region           = &quot;us-phoenix-1&quot;
+cidr             = &quot;172.16.0.0/20&quot;
+```
+
+These are setting variable values (note that there's no `var.` prefix used).  Terraform implicitly uses the `terraform.tfvars` file for setting variable values.
+
+The `terraform.tfvars` file is statically read, meaning that there's no computation that takes place.  Terraform does not reference other variables, resources or other Terraform functions.  It reads only static values.
+
+The `terraform.tfvars` file can often be used for setting environment-specific settings.  It is usually not committed to git repos (at least alongside the Terraform code), as its values might determine the characteristics for the environment.
+
+### `*.auto.tfvars`
+
+You can specify as many files as you'd like that end in `.auto.tfvars` and Terraform will gladly read these and set variable values accordingly.  This allows you to set different variable definitions between different files.  For instance, it might make sense to set the variable definitions as-follows (this is just an example, by no means the only way).
+
+* `network.auto.tfvars`
+* `storage.auto.tfvars`
+* `compute.auto.tfvars`
+
+Grouping variable assignments like this allows a person to better navigate between variables, especially if there's a large number of variables.
+
+### Via environment variables
+
+Terraform is smart enough to look at the environment variables at run-time.  If there are any that begin with `TF_VAR_` (the full environment variable would be: `TF_VAR_&lt;variable_name&gt;`), Terraform will assign the value to the given variable.
+
+Here's an example of how to set the `compartment_id` variable on a MacOS/Linux system.
+
+```bash
+export TF_VAR_compartment_id=&lt;your_compartment_OCID_here&gt;
+```
+
+This same environment variable might be set as follows on Windows:
+
+```bash
+setx TF_VAR_compartment_id &lt;your_compartment_OCID_here&gt;
+```
+
+### Via user-interactive prompts
+
+If a variable is not given a value, Terraform will resort to asking the user to provide it at run-time.  Terraform cannot proceed without knowing what value to use.
+
+This is annoying and can be tedious (especially if there are lots of undefined variables), however there are times when this might make perfect sense and be a desirable behavior.  In situations where the user should be asked for a value (such as for a confirmation prompt), this can be a good solution.
+
+## Defining variables
+
+To define the existence of a variable, simply provide the following anywhere in the Terraform code:
+
+```terraform
+variable &quot;compartment_id&quot; {}
+```
+
+It's common practice to place variable definitions in a single file: `variables.tf`.  This allows for easier management of variable definitions (having them in one place).
+
+Besides the name of the variable, there are several different attributes you can set for a variable, including (but not limited to):
+
+* type (some of the common types will be discussed shortly)
+* description (it's nice to let people know how this variable is used)
+* default
+* sensitive
+
+### Default values
+
+The `default` attribute is important to know about, as its behavior is multi-purpose.  Notice how there's no `required` attribute?  If a variable does *not* have a default value, Terraform will require the variable value to be set.  This means that `default` not only allows you to provide a default, but it can also make a variable &quot;optional&quot; (sort of).  This is really just a side effect of providing a value. Every variable defined *must* have a value.  Giving a default value (even if empty, such as a value of `&quot;&quot;` or `null`) keeps Terraform from &quot;bugging&quot; the operator, which gives the impression that it's *not* required.  It's a matter of how you look at it.
+
+Some variables might best be left blank (so it's very obvious if the user running Terraform doesn't set it to a specific value).  Often times it's nice to have &quot;sane defaults&quot; set so that a reasonable default value is used on a variable, minimizing the amount of inputs that must be provided.  When a variable is given a default value, the default value is used unless it is overridden (with a value explicitly set).
+
+To define a default value, add the `default` attribute to the variable definition.
+
+```terraform
+variable &quot;compartment_id&quot; {
+  default = &quot;abcd.1234&quot;
+}
+```
+
+In the above example, unless a value is explicitly provided, the default value of &quot;abcd.1234&quot; will be used for the the `compartment_id` variable.
+
+### Sensitive variables
+
+If you set the sensitive attribute of a variable to `true`, Terraform tries to minimize displaying the value to the user. This is not a guarantee that it's not accessible to the user or that it won't be shown on the screen.  See the [Terraform documentation](https://www.terraform.io/docs/language/values/variables.html#suppressing-values-in-cli-output) for more information.
+
+Here's an example:
+
+```terraform
+variable &quot;api_token&quot; {
+  sensitive = true
+}
+```
+
+In the above example, the visibility of the `api_token` variable is minimized through the use of setting the `sensitive` attribute to true for the `api_token` variable.
+
+## Variable Types
+
+### Strings
+The variables used up to this point have been string values.  String values are enclosed by double-quotes (&quot;).
+
+```terraform
+compartment_id=&quot;&lt;your_compartment_OCID_here&gt;&quot;
+```
+
+Here's how this is defined in `variables.tf`:
+
+```terraform
+variable tenancy_id {
+  type = string
+}
+```
+
+Strings are common, but are by no means the only kind that you can use.
+
+### Numbers
+Numbers are numeric values that are not surrounded by quotes.
+
+```terraform
+number_of_computes=10
+```
+
+Here's how this might be defined in `variables.tf`:
+
+```terraform
+variable &quot;number_of_computes&quot; {
+  type = number
+}
+```
+
+### Boolean
+
+Like many other languages, Terraform supports `true` and `false` boolean values.  Here's an example of a Boolean variable being set.
+
+```terraform
+create_computes = true
+```
+
+In the above example, the `create_computes` variable is set to `true`.  These can be useful for many things, including specifying the desired behavior (like this example, where it might be possible to not create the computes if the value was set to `false`).
+
+Here's how this might be defined in `variables.tf`:
+
+```terraform
+variable &quot;create_computes&quot; {
+  type = bool
+}
+```
+
+### Lists
+
+There are times when a list is needed.  Terraform lists are similar to arrays in many other languages.  A Terraform list is an ordered lists of values of a given type (could be string values, number values, etc.).  Here's an example of a string list.
+
+```terraform
+compute_names = [ &quot;web1&quot;, &quot;web2&quot;, &quot;app1&quot;, &quot;app2&quot;, &quot;db1&quot;, &quot;db2&quot; ]
+```
+
+Here's how this might be defined in `variables.tf`.
+
+```terraform
+variable &quot;compute_names&quot; {
+  type = list(string)
+}
+```
+
+To reference a list element, use the index of the item.  Terraform is zero-indexed, so the first item is index `0`, the second item is index `1`, and so on.  Look at how you might reference the `db1` value (from the above list example, being element `5`, index `4`):
+
+```terraform
+var.compute_names[4]   # this equals &quot;db1&quot;
+```
+
+### Maps
+
+When the power of a key-value relationship is needed, Terraform maps are here to help!  Maps are similar to hashes in some other languages, allowing you to have multiple keys, with each key having a value.  Here's an example of a map.
+
+```terraform
+compute_shapes = {
+  &quot;web1&quot; = &quot;VM.Standard2.1&quot;,
+  &quot;web2&quot; = &quot;VM.Standard2.1&quot;,
+  &quot;app1&quot; = &quot;VM.Standard2.4&quot;,
+  &quot;app2&quot; = &quot;VM.Standard2.4&quot;,
+  &quot;db1&quot;  = &quot;VM.Standard2.8&quot;,
+  &quot;db2&quot;  = &quot;VM.Standard2.8&quot;
+}
+```
+
+Here's how this is defined in `variables.tf`.
+
+```terraform
+variable &quot;compute_shapes&quot; {
+  type = map(string)
+}
+```
+
+Notice that it is given what kind of values to expect in the map.  This could've been a map of numbers (instead of strings) or another valid variable type.
+
+To reference a map element, use the item key.  Here's how the `db1` value might be referenced.
+
+```terraform
+var.compute_shapes[&quot;db1&quot;]   # this equals &quot;VM.Standard2.8&quot;
+```
+
+## Sample Variable Definitions
+
+Here's an example of a &quot;toggle&quot; variable (a boolean, which is either `true` or `false`):
+
+```terraform
+variable &quot;extra_power&quot; {
+  type = bool
+  default = true
+}
+```
+
+And here's an example of a more complex variable (taken from [https://github.com/oracle-devrel/terraform-oci-ocloud-landing-zone/blob/main/component/network_domain/input.tf](https://github.com/oracle-devrel/terraform-oci-ocloud-landing-zone/blob/main/component/network_domain/input.tf)):
+
+```terraform
+variable &quot;subnet&quot; {
+  type = object({
+    cidr_block                  = string,
+    prohibit_public_ip_on_vnic  = bool, 
+    dhcp_options_id             = string,
+    route_table_id              = string
+  })
+  description                   = &quot;Parameters for each subnet to be managed&quot;
+}
+```
+
+In the above example, the subnet variable contains several attributes (`cidr_block`, `prohibit_public_ip_on_vnic`, etc.), which are of different types.  This is just one example of how complex variables can be crafted.  Don't worry about this though, as complex variables are optional (you can stick with single-value variables for most use-cases).
+
+These are just a few examples.  You can get really crazy with variables!  Have fun with them, be creative, and remember that variables largely define the input interface for the Terraform environment.  Look at the [Terraform language documentation on input variables](https://www.terraform.io/docs/language/values/variables.html) to discover some of the other variable types and Terraform variable functionality.</content><author><name>Tim Clegg</name></author><category term="iac" /><category term="opensource" /><category term="open-source" /><category term="terraform" /><category term="iac" /><category term="devops" /><category term="beginner" /></entry><entry><title type="html">Understanding the basics of Terraform</title><link href="https://cool.devo.build/collections/tutorials/tf-101/3-understanding-terraform-basics" rel="alternate" type="text/html" title="Understanding the basics of Terraform" /><published>2021-10-14T08:13:00+00:00</published><updated>2021-10-14T08:13:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/tf-101/3-understanding-terraform-basics">In our [first lesson](1-why-iac), we covered why you should care about IaC.  We also touched on just a few of the many tools in this space.  Finally, we've decided to narrow our focus down to Terraform.  The [last lesson](2-experiencing-terraform) took you through a really quick and simple scenario using Terraform.  It was short but powerful, and hopefully helped you understand a bit of why Terraform (and IaC) is so cool.  This lesson will take you through some of the basic concepts you should know to effectively work with Terraform.
+
+## Major Terraform Components
+
+In the IaC world, resources are defined using code.  Terraform follows a *declarative* language model, meaning that you tell it where you want to be after it executes and it figures out what's needed to get there. Terraform doesn't need to be told &quot;do this, then do this, then finish with this&quot;, as is common with many procedural languages. You simply tell it where you want it to end and it'll map out the path.  Most of the time it's able to figure out the right steps.  Occasionally it'll need some help, but we'll talk a little about that in another tutorial.
+
+Terraform has a couple of core components that you should know about:
+
+* Terraform executable
+* Terraform provider(s)
+* Terraform code
+* Terraform state
+
+## Terraform executable
+
+The Terraform executable can be easily downloaded and installed on many different platforms.  Check out the [Terraform downloads page](https://www.terraform.io/downloads.html) for the Terraform CLI binaries for different platforms.
+
+If you're using Linux, it's possible that Terraform might exist in your favorite package manager (look at `yum install terraform` or `apt-get install terraform`). Oracle Linux makes it super simple to install Terraform (check out the [Oracle docs](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/terraforminstallation.htm) for more info).  Using Oracle Linux is super easy (just use Yum). If you're not using Oracle Linux, you'll likely need to configure your package manager (see [RHEL/Fedora Yum docs](https://www.terraform.io/docs/cli/install/yum.html) or [Debian/Ubuntu APT docs](https://www.terraform.io/docs/cli/install/apt.html)).
+
+On MacOS, simply download the binary and place it somewhere in your path.  So long as `terraform -v` works from a terminal, you should be ready to go! You can also use [homebrew](https://brew.sh), which makes it as easy as `brew install terraform`.
+
+There are many different commands that Terraform accepts.  Here are some of the more common ones frequently used:
+
+`terraform init`
+: This must be run at least once for a Terraform project.  This is when Terraform downloads any needed providers, sets up the state (if it doesn't already exist), etc.
+
+`terraform plan`
+: Prompts Terraform to do a dry run, to determine what it would do if it was to apply.  No changes are made.  It simply tells you what it thinks should be done.  It's a good idea to always run `terraform plan` and review the output (before applying), to make sure that you fully understand what Terraform is saying must be done.
+
+`terraform apply`
+: Changes are made with this command.  It'll by default show you the same output as `terraform plan`, asking you if you'd like to continue.  There are ways to short-circuit this and always apply, but when running Terraform by hand, it's a good idea to always review what things it plans to do (before it does them).
+
+`terraform console`
+: Gives you an interactive console where you can enter different Terraform commands. Particularly useful for building and testing logic in Terraform code.
+
+## Terraform provider(s)
+
+Providers allow Terraform to interact with different platforms.  This is what bridges the gap between the Terraform code and a given platform (such as OCI).  One or more providers can be used at any time.  The OCI provider translates the Terraform code to how Terraform needs to interact with the OCI API, for instance.  Many clouds have Terraform providers, allowing you to define resources that are specific to a cloud using a standard format, tool and language.
+
+Check out [the OCI Terraform provider documentation](https://registry.terraform.io/providers/hashicorp/oci/latest/docs) for an idea of the different kinds of resources that can be managed with it.  We'll walk through a really simple example at the end of this tutorial, so don't sweat it if this seems a little overwhelming!  Hang in there and it'll be worth it (it'll come together).
+
+You will need to tell Terraform about which providers you'll be using in your code.  Providers are typically referenced in `terraform` and `provider` blocks.
+
+&gt; **NOTE:** A block of Terraform code is something that's including multiple lines of code enclosed within an opening (`{`) and closing (`}`) curly brackets.
+{:.notice}
+
+Let's look at how to tell Terraform we want to use the OCI provider:
+
+```terraform
+terraform {
+  required_version = &quot;&gt;= 0.14.0&quot;
+  required_providers {
+    oci = {
+      source  = &quot;hashicorp/oci&quot;
+      version = &quot;&gt;= 4.39.0&quot;
+    }
+  }
+}
+
+provider &quot;oci&quot; {
+  region = var.region
+  auth   = &quot;InstancePrincipal&quot;
+}
+```
+
+The first `terraform` block is telling Terraform to download and include specific providers (those within the `required_providers` block).  In this case, we're including the `oci` provider, specifically version `4.39.0` or greater.
+
+&gt; **NOTE:** The `required_providers` portion of the `terraform` block is optional but nice to include as it allows you to constrain the version and source of a given provider.
+{:.notice}
+
+The OCI provider block contains information that's specific to the provider.  In this case, we're telling the OCI provider which region to use and asking it to authenticate against the OCI API using [Instance Principals](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm).
+
+&gt; **NOTE:** The `auth` line in the OCI provider block is optional. It's one way of authenticating (using [Instance Principals](https://docs.oracle.com/en-us/iaas/Content/Identity/Tasks/callingservicesfrominstances.htm)), but certainly not the only way.
+{:.notice}
+
+Although it's possible to manually download and install Terraform providers, by default Terraform will automatically download and install (manage) providers for you.  This is accomplished by running the `terraform init` command from the directory containing your Terraform code.
+
+&gt; **NOTE:** Managed Terraform services such as [OCI Resource Manager (ORM)](https://docs.oracle.com/en-us/iaas/Content/ResourceManager/home.htm) do not require you to go through any Terraform initialization process.  This is managed for you by ORM.  This step is needed when running Terraform from your own computer (or server).
+{:.notice}
+
+## Terraform Code
+
+Terraform uses a proprietary [configuration language](https://www.terraform.io/docs/language/index.html).  Like any language, it's reasonable to expect a slight learning curve when you're first starting out, but once you gain some familiarity and experience with it, expect it to grow on you.
+
+It's highly recommended to at least skim the [Terraform configuration language documentation](https://www.terraform.io/docs/language/index.html), gaining some familiarity with the basic concepts, structural components, and functions available in the language.
+
+&gt; **NOTE:** Terraform has undergone some significant changes to the Terraform configuration language over the past several years.  If you see code that is written for Terraform v0.11 (or earlier), you'll likely need to update it to a more recent version.
+{:.notice}
+
+In the code, you'll likely define a combination of variables (user provided input), locals (local variables), outputs (values shown as output after running Terraform), providers, and resources.  Most all of the other code elements are engineered to support the management of resources.  This is really what gets changed in OCI (or another environment, depending on the providers you're using and the resources you're managing) when Terraform is run.  Whether declaring a single resource or iteratively creating many resources via a loop construct, resources are typically what we're trying to manage with Terraform.
+
+## A Terraform Project
+
+A typical Terraform project can be broken into familiar constructs typical to many applications:
+
+  * Inputs
+  * Outputs
+  * Logic
+
+### Inputs
+
+Terraform receives input via the usage of variables.  Variables may be set via command-line parameters, static files or environment variables.  There are a lot of facets to mastering the usage of variables, so we'll cover these in greater detail in [another lesson](4-variables).  For now, know that each variable must be given a name (defined with a variable block) and value (set to a value), like the following simple example:
+
+```terraform
+variable &quot;region&quot; {}
+```
+
+The above variable example is the most simplistic variable definition. They can get more complex, though.  If you want to jump ahead, feel free to look ahead to the [lesson on variables](4-variables) and check out the [Terraform variable documentation]((https://www.terraform.io/docs/language/values/variables.html)).
+
+Where should you place your variables (in which `.tf` file)?  Variables are most often defined in a file called `variables.tf`.  Pretty self-explanatory, right?  This isn't required, but is good form and common practice for all but really small projects.  Most of the time it's a good idea to make the filename specific to the type of resources defined in it.
+
+To dig in deeper, check out the excellent [Terraform variables documentation](https://www.terraform.io/docs/language/values/variables.html).
+
+### Outputs
+
+There are times when Terraform needs to provide data about the environment back to the display.  For example, when a compute instance is deployed, a private IP address may be specified.  If it's not specified, OCI will pick an IP address for us (from the Subnet the instance is being deployed in).  Wouldn't it be nice to be able to see this private IP address?  Many different attributes are exported by Terraform resources, allowing you to easily examine them via the usage of outputs.
+
+Outputs are technically called &quot;output variables.&quot;  These are shown at the end of running `terraform apply` (running `terraform plan` won't show outputs).  Here's an example of an output:
+
+```terraform
+output &quot;vcn_state&quot; {
+  description = &quot;The state of the VCN.&quot;
+  value       = oci_core_vcn.tf_101.state
+}
+```
+
+Outputs can be defined in any Terraform code file (`*.tf`). However, it’s a good idea to get into the practice of separating Terraform code into logical files so the code base is easier to navigate.  It's recommended to use the file `outputs.tf` for this purpose (keeps it logical).
+
+The value of an output can be any programmatic calculation supported in Terraform code.  See this at work with the following example:
+
+```terraform
+output &quot;two_plus_two&quot; {
+  value       = 2+2
+}
+```
+
+This is super simple - just adding two numbers together.  You can use many  [functions in Terraform](https://www.terraform.io/docs/language/functions/index.html); let your mind wander a bit around what you might be able to do.  String substitutions, merging, changes, calculating hashes, etc.  The world's your oyster!
+
+Coercing outputs can be particularly valuable when using Terraform in automated pipelines as well as when running it manually (so users can see useful data).
+
+### Logic
+
+Terraform provides many different functions which allow you to embed logic and perform some rather complex computations.  Need to loop (iterate) through a list or map?  You're covered!  How about concatenating strings (or many other kind of string manipulations)?  Got it.  If-then-else logic?  Yep, it's there.  Need to do some CIDR calculations?  There are functions for that.  Check out the [Terraform functions](https://www.terraform.io/docs/language/functions/index.html), [Terraform conditional expressions](https://www.terraform.io/docs/language/expressions/conditionals.html) and [Terraform `for` expressions](https://www.terraform.io/docs/language/expressions/for.html) for more information.  It's well worth skimming through, even if just to gain some basic familiarity with some of what's available and possible.
+
+## Terraform State
+
+When interacting with an environment, there are three main components Terraform needs (in addition to the Terraform binary):
+
+1. Terraform code
+2. Terraform state
+3. Environment being managed
+
+Terraform uses a lot of intelligence to map out relationships between managed resources.  Many applications rely on a local database to store information needed by the application.  Terraform's no different, and is very transparent in how it manages its application content, storing what's needed in a local JSON file (by default).
+
+The state is where Terraform caches a copy of what it knows about the environment.  Details about the managed resources are stored here, in verbose form.  Inputs (variable values) are also cached here.  State files should be carefully guarded as it's possible to have secrets or other sensitive data stored in them.  Even though a variable might be marked as sensitive, Terraform can store the contents in the state file.  Although it might not show via `terraform apply`, it might be there &quot;in the open&quot; in the state file.
+
+When Terraform runs, it will update the state (with what actually exists in the environment being managed) and compare the state against the code.  Any deltas (variances between the code and state) will be marked as requiring a remediation (change that must be made to bring the current resource state to where the code is asking for it).
+
+It's important to always use the latest copy of the state, as `terraform apply` might update the state file.  This is particularly important when sharing the management responsibilities for a single environment among multiple people.  Each environment has a *single* state file.  If the state file becomes corrupted or out-of-sync, Terraform can do weird and unexpected things.  It's really not good --- carefully guard your state file!
+
+The state is stored locally within the project directory by default (`terraform.tfstate`).  Backends may be defined which would tell Terraform to store the state in a different location.  Many different kinds of backends are supported - check out the [backend documentation](https://www.terraform.io/docs/language/settings/backends/index.html) for more information.  For this tutorial, we'll be sticking with keeping the state local.  For production deployments, many customers will find the use of [OCI Resource Manager](https://docs.oracle.com/en-us/iaas/Content/ResourceManager/home.htm) of benefit, as it maintains the Terraform state file for each stack automatically.  Others might leverage OCI Object Storage as a backend, while some might prefer using git.
+
+## Moving Forward
+
+Now that you understand some of the basic components used in a Terraform project, let's dive into [variables in the next lesson](4-variables).</content><author><name>Tim Clegg</name></author><category term="iac" /><category term="opensource" /><category term="open-source" /><category term="terraform" /><category term="iac" /><category term="devops" /><category term="beginner" /></entry><entry><title type="html">How to Deploy a Python Flask Application in a Kubernetes cluster</title><link href="https://cool.devo.build/collections/tutorials/deploy-flask-app-cloud-shell" rel="alternate" type="text/html" title="How to Deploy a Python Flask Application in a Kubernetes cluster" /><published>2021-10-11T01:00:00+00:00</published><updated>2021-10-11T01:00:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/deploy-flask-app-cloud-shell">In this tutorial, you use an Oracle Cloud Infrastructure account to set up a Kubernetes cluster. Then, you create a Python application with a Flask framework. Finally, you deploy your application to your cluster using Cloud Shell.
+
+Key tasks include how to:
+
+  * Create a Compartment.
+  * Set up a Kubernetes cluster on OCI.
+  * Build a Python application in a Flask framework.
+  * Create a Docker image.
+  * Push your image to OCI Container Registry.
+  * Use Cloud Shell to deploy your Docker application to your cluster.
+  * Connect to your application from the internet.
+![A diagram of the components needed to run a Flask app on Kubernetes cluster, on Oracle Cloud Infrastructure](assets/flask-shell-diagram.png)
+
+For additional information, see:
+
+  * [More on Kubernetes](https://kubernetes.io/docs/home/)
+  * [OCI Container Engine](https://docs.oracle.com/iaas/Content/ContEng/Concepts/contengoverview.htm)
+  * [OCI Container Registry](https://docs.oracle.com/iaas/Content/Registry/Concepts/registryoverview.htm)
+  * [Cloud Shell](https://docs.oracle.com/iaas/Content/API/Concepts/cloudshellintro.htm)
+
+## Before You Begin
+
+To successfully perform this tutorial, you must have the following:
+
+### Requirements
+
+  * A **Free trial** or a **paid** Oracle Cloud Infrastructure account. You can sign up [here](https://signup.cloud.oracle.com/?language=en&amp;sourceType=:ow:de:te::::RC_WWMK210625P00048:Free&amp;intcmp=:ow:de:te::::RC_WWMK210625P00048:Free).
+  * Cloud Shell or the following 
+     * JDK 8+
+     * Python 3.6.8+
+     * Kubectl 1.18.10+
+     * Apache Maven 3.5+
+     * Docker 19.0.11+
+
+&gt; The advantage of using Cloud Shell is all the required tools to manage your application are already installed and ready to use.
+{:.notice}
+
+## Prepare
+
+Prepare your environment to create and deploy your application.
+
+### Check your Service Limits
+
+  1. Log in to the Oracle Cloud Infrastructure **Console**.
+  2. Open the navigation menu, and click Governance and Administration. Under Governance, click Limits, Quotas and Usage.
+  3. Find your service limit for **Regions**:
+     * **Filter** for the following options:
+       * **Service:** Regions
+       * **Scope:** Tenancy
+       * **Resource:** Subscribed region count
+       * **Compartment:** `&lt;tenancy-name&gt;` (root)
+     * Find service limit:
+       * **Limit Name:** `subscribed-region-count`
+       * **Service Limit:** minimum 2
+  4. Find your available **Compute** **core count** for the **VM.Standard.E2.1** shape:
+     * **Filter** for the following options:
+       * **Service:** Compute
+       * **Scope:** `&lt;first-availability-domain&gt;`. Example: `EMlr:US-ASHBURN-AD-1`
+       * **Resource:** **Cores** for Standard.E2 based VM and BM Instances
+       * **Compartment:** `&lt;tenancy-name&gt;` (root)
+     * Find available core count:
+       * **Limit Name:** `standard-e2-core-count`
+       * **Available:** minimum 1
+     * Repeat for **Scope:** `&lt;second-availability-domain&gt;` and `&lt;third-availability-domain&gt;`. Each region must have at least one core available for this shape.
+  5. Find out if you have **50 GB** of **Block Volume** available:
+     * **Filter** for the following options:
+       * **Service:** Block Volume
+       * **Scope:** `&lt;first-availability-domain&gt;`. Example: `EMlr:US-ASHBURN-AD-1`
+       * **Resource** Volume Size (GB)
+       * **Compartment:** `&lt;tenancy-name&gt;` (root)
+     * Find available core count:
+       * **Limit Name:** `total-storage-gb`
+       * **Available:** minimum 50
+     * Repeat for **Scope:** `&lt;second-availability-domain&gt;` and `&lt;third-availability-domain&gt;`. Each region must have at least 50 GB of block volume available.
+  6. Find out how many **Flexible Load Balancers** you have available:
+     * **Filter** for the following options:
+       * **Service:** LBaaS
+       * **Scope:** `&lt;your-region&gt;`. Example: `us-ashburn-1`
+       * **Resource:** &lt;blank&gt;
+       * **Compartment:** `&lt;tenancy-name&gt;` (root)
+     * Find the count for the following shapes
+       * **Limit Name:** `lb-flexible-bandwidth-count`
+       * **Available:** minimum 1
+
+
+&gt; This tutorial creates three compute instances with a **VM.Standard.E2.1** shape for the cluster nodes. To use another shape, filter for its **core count**. For example, for **VM.Standard2.4**, filter for **Cores for Standard2 based VM and BM Instances** and get the **count**.
+&gt; - For a list of all shapes, see [VM Standard Shapes](https://docs.oracle.com/iaas/Content/Compute/References/computeshapes.htm#vmshapes__vm-standard).
+{:.notice}
+
+&gt; This tutorial creates a load balancer with a **flexible** shape. To use another bandwidth, filter for its **count**, for example **100-Mbps bandwidth** or **400-Mbps bandwidth**.
+{:.notice}
+
+### Create an Authorization Token
+
+  1. In the Console's top navigation bar, click the **Profile** menu (your avatar).
+  2. Click your username.
+  3. Click Auth Tokens.
+  4. Click Generate Token. 
+  5. Give it a description.
+  6. Click Generate Token.
+  7. Copy the token and **save** it.
+  8. Click Close.
+
+      &gt; **Ensure that you save your token** right after you create it. You have no access to it later.
+      {:.notice}
+
+### Gather Required Information
+
+
+  1. Collect the following credential information from the Oracle Cloud Infrastructure **Console**.
+
+     * **Tenancy name:** `&lt;tenancy-name&gt;`
+       * Click your **Profile** menu (your avatar) and find your **Tenancy:&lt;tenancy-name&gt;**.
+     * **Tenancy namespace:** `&lt;tenancy-namespace&gt;`
+       * Click your **Profile** menu (your avatar).
+       * Click **Tenancy: &lt;tenancy-name&gt;**.
+       * Copy the value for **Object Storage Namespace**.
+
+      &gt;For some accounts, tenancy name and namespace differ. Ensure that you use namespace in this tutorial.
+      {:.notice}
+
+     * **Tenancy OCID:** `&lt;tenancy-ocid&gt;`
+       * Click your **Profile** menu (your avatar), then click **Tenancy:&lt;tenancy-name&gt;**, and copy OCID.
+     * **Username:** `&lt;user-name&gt;`
+       * Click your **Profile** menu (your avatar).
+     * **User OCID:** `&lt;user-ocid&gt;`
+       * Click your **Profile** menu (your avatar), then click **User Settings**, and copy OCID.
+
+  2. Find your region information.
+
+     * **Region:** `&lt;region-identifier&gt;`
+       * In the Console's top navigation bar, find your region. Example: **US East (Ashburn)**.
+       * Find your **Region Identifier** from the table in [Regions and Availability Domains](https://docs.oracle.com/iaas/Content/General/Concepts/regions.htm). 
+       * Example: `us-ashburn-1`.
+     * **Region Key:** `&lt;region-key&gt;`
+       * Find your **Region Key** from the table in [Regions and Availability Domains](https://docs.oracle.com/iaas/Content/General/Concepts/regions.htm). 
+       * Example: `iad`
+
+  2. Copy your authentication token from **Create an Authentication Token** section.
+
+     * **Auth Token:** `&lt;auth-token&gt;`
+
+
+## Set Up a Cluster
+
+Install and configure management options for your Kubernetes cluster. Later, deploy your application to this cluster.
+
+### Add Compartment Policy
+
+If your username is in the **Administrators** group, then skip this section. Otherwise, have your administrator add the following policy to your tenancy:
+ 
+    allow group &lt;the-group-your-username-belongs&gt; to manage compartments in tenancy
+
+With this privilege, you can create a compartment for all the resources in your tutorial.
+
+### Steps to Add the Policy
+
+  1. In the Console's top navigation bar, open the **Profile** menu (your avatar).
+  2. Click your username.
+  3. In the left pane, click Groups.
+  4. In a notepad, copy the **Group Name** that your username belongs.
+  5. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Policies**.
+  6. Click Create Policy.
+  7. Fill in the following information:
+
+     * **Name:** `manage-compartments`
+     * **Description:** `Allow the group &lt;the-group-your-username-belongs&gt; to list, create, update, delete and recover compartments in the tenancy.`
+     * **Compartment:** `&lt;your-tenancy&gt;(root)`
+
+  8. For **Policy Builder**, click Show Manual Editor.
+  9. Paste in the following policy:
+
+    
+    allow group &lt;the-group-your-username-belongs&gt; to manage compartments in tenancy
+
+  10. Click Create.
+
+**Reference**
+
+The `compartments` resource-type in [Verbs + Resource-Type Combinations for IAM](https://docs.oracle.com/iaas/Content/Identity/Reference/iampolicyreference.htm#Identity)
+
+### Create a Compartment
+
+Create a compartment for the resources that you create in this tutorial.
+
+  1. Log in to the Oracle Cloud Infrastructure **Console**.
+  2. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Compartments**.
+  3. Click Create Compartment.
+  4. Fill in the following information:
+     * **Name:** `&lt;your-compartment-name&gt;`
+     * **Description:** `Compartment for &lt;your-description&gt;.`
+     * **Parent Compartment:** `&lt;your-tenancy&gt;(root)`
+  5. Click Create Compartment.
+
+**Reference:** [Create a compartment](https://docs.oracle.com/iaas/Content/Identity/Tasks/managingcompartments.htm#To)
+
+### Add Resource Policy
+
+If your username is in the **Administrators** group, then skip this section. Otherwise, have your administrator add the following policy to your tenancy:
+
+```  
+allow group &lt;the-group-your-username-belongs&gt; to manage all-resources in compartment &lt;your-compartment-name&gt;
+```
+
+With this privilege, you can **manage all the resources** in your **compartment**, essentially giving you administrative rights in that compartment.
+
+### Steps to Add the Policy
+
+  1. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Policies**.
+  2. Select your compartment from the Compartment list.
+  3. Click Create Policy.
+  4. Fill in the following information:
+
+     * **Name:** `manage-&lt;your-compartment-name&gt;-resources`
+     * **Description:** `Allow users to list, create, update, and delete resources in &lt;your-compartment-name&gt;.`
+     * **Compartment:** `&lt;your-tenancy&gt;(root)`
+
+  5. For **Policy Builder**, select the following choices:
+
+     * **Policy use cases:** `Compartment Management`
+     * **Common policy templates:** `Let compartment admins manage the compartment`
+     * **Groups:** `&lt;the-group-your-username-belongs&gt;`
+     * **Location:** `&lt;your-tenancy&gt;(root)`
+
+  6. Click Create.
+
+**Reference**
+
+[Common Policies](https://docs.oracle.com/iaas/Content/Identity/Concepts/commonpolicies.htm)
+
+### Create a Cluster with 'Quick Create'
+
+Create a cluster with default settings and new network resources through the 'Quick Create' workflow.
+
+  1. Sign in to the Oracle Cloud Infrastructure **Console**.
+  2. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click**Kubernetes Clusters (OKE)**.
+  3. Click Create Cluster.
+  4. Select Quick Create.
+  5. Click Launch Workflow.
+  6. The **Create Cluster** dialog is displayed. Fill in the following information.
+
+     * **Name:** `&lt;your-cluster-name&gt;`
+     * **Compartment:** `&lt;your-compartment-name&gt;`
+     * **Kubernetes Version:** `&lt;take-default&gt;`
+     * **Kubernetes API Endpoint:** Public Endpoint 
+      The Kubernetes cluster is hosted in a public subnet with an auto-assigned public IP address.
+     * **Kubernetes Worker Nodes:** Private Workers 
+      The Kubernetes worker nodes are hosted in a private subnet.
+
+     * **Shape:** VM.Standard.E2.1
+     * **Number of Nodes:** 3
+     * **Specify a custom boot volume size:** Clear the check box.
+
+  7. Click **Next**.
+  All your choices are displayed. Review them to ensure that everything is configured correctly.
+
+  8. Click **Create Cluster**.
+  The services set up for your cluster are displayed.
+
+  9. Click **Close**.
+  10. Get a cup of coffee. It takes a few minutes for the cluster to be created.
+
+You have successfully created a Kubernetes cluster.
+
+### Configure Cloud Shell to Access to Your Cluster
+
+After you create a Kubernetes cluster, set up your local system to access the cluster.
+
+  1. Sign in to the Oracle Cloud Infrastructure **Console**.
+  2. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click**Kubernetes Clusters (OKE)**.
+  3. Click the link to **`&lt;your-cluster&gt;`**.
+
+The information about your cluster is displayed.
+
+  4. Click Access Cluster.
+  5. Click Cloud Shell Access. Follow the steps in the dialog. The following steps are provided for your reference.
+  6. From the main menu, click the Cloud Shell icon (![](https://docs.oracle.com/en-us/iaas/developer-tutorials/tutorials/common/k8s-cs/images/cloud_shell_icon.png)) and start a session.
+  7. Check your `oci` CLI version and verify that Cloud Shell is working.
+      ```console  
+      oci -v
+      ```
+  8. Make your `.kube` directory if it doesn't exist.
+      ```console
+      mkdir -p $HOME/.kube
+      ```
+  9.  Create kubeconfig file for your setup. Use the information from **Access Your Cluster** dialog.
+      ```console
+      oci ce cluster create-kubeconfig &lt;use data from dialog&gt;
+      ```
+
+  10. Test your cluster configuration with the following command.
+        ```console
+        kubectl get service
+        ```
+
+&gt; If the `config` file is not stored in its default location (`~/.kube/config`), you must export the`KUBECONFIG` environment variable to point to the location. 
+&gt; 
+&gt;   _export KUBECONFIG=$HOME/&lt;new-location&gt;/config_
+{:.notice} 
+  
+&gt; When working with more than one cluster, you specify a specific config file on the command line.
+&gt; Example:
+&gt;    kubectl --kubeconfig=&lt;/path/to/config/file&gt; &lt;some-command&gt;
+{:.notice}
+
+
+With your cluster access setup, you are now ready to prepare your application for deployment.
+
+## Build your Docker Application
+
+Next, set up the Flask framework on Cloud Shell. Then, create and run a Python application. 
+
+### Create a Local Application
+
+Create your Flask application.
+
+  1. Install Flask.
+      ```console
+      pip3 install --user Flask
+      ```
+
+  2. Create a directory for your application.
+      ```console
+      mkdir python-hello-app
+      ```
+
+  3. Change to the `python-hello-app` directory.
+      ```console
+      cd python-hello-app
+      ```
+
+  4. Create a &quot;Hello, World!&quot; application.
+     - Create the file:
+  
+      ```console
+      vi hello.py
+      ```
+     - In the file, input the following text:
+  
+      ```python
+      from flask import Flask
+      app = Flask(__name__)
+
+      @app.route('/')
+      def hello_world():
+          return '&lt;h1&gt;Hello World from Flask!&lt;/h1&gt;'
+
+      if __name__ == &quot;__main__&quot;:
+          app.run(host=&quot;0.0.0.0&quot;, port=int(&quot;5000&quot;), debug=True)
+      ```
+
+  5. Save the file.
+
+### Run the Local Application
+
+Run your Flask application.
+
+  1. Run the Python program.
+      ```console
+      export FLASK_APP=hello.py
+      export FLASK_ENV=development
+      python3 hello.py
+      ```
+
+      Produces the following output:
+          
+      * Serving Flask app 'hello' (lazy loading)
+      * Environment: development
+      * Debug mode: on
+      * Running on all addresses.
+      WARNING: This is a development server. Do not use it in a production deployment.
+      * Running on http://x.x.x.x:5000/ (Press CTRL+C to quit)
+      * Restarting with stat
+      * Debugger is active!
+      * Debugger PIN: xxx-xxx-xxx                    
+
+  2. Move the app to the background.
+
+     * Hit **Ctrl z**.
+     * Enter the following command: `bg`
+
+  3. Test the app using `curl`.
+
+      In Cloud Shell terminal, enter the following code:
+      ```console
+      curl -X GET http://localhost:5000
+      ```
+      Output:
+      ```html 
+      &lt;h1&gt;Hello World from Flask!&lt;/h1&gt;
+      ```
+  4. Stop the running application.
+
+      When you are done testing, get the process ID for your application.
+      ```console
+      ps -ef
+      ```
+      Stop the process.
+      ```console
+      kill &lt;your-pid&gt;
+      ```
+
+You have successfully created a local Python application with the Flask framework.
+
+**References:**
+
+For more information on Flask, see [Flask Documentation](https://flask.palletsprojects.com/).
+
+### Build a Docker Image
+
+Next, create a Docker image for your Flask application.
+
+  1. First, ensure you are in the `python-hello-app` directory.
+  2. Create the configuration file `Dockerfile`:
+
+      ```console
+      vi Dockerfile
+      ```
+
+      In the file, input the following text and save the file:
+      ```dockerfile   
+      FROM python:3.9-slim-buster
+      ADD hello.py /
+      COPY . /app
+      WORKDIR /app
+      RUN pip3 install Flask
+      EXPOSE 5000
+      CMD [ &quot;python3&quot;, &quot;./hello.py&quot; ]
+      ```
+  3. Build a Docker image: 
+      ```console
+      docker build -t python-hello-app .
+      ```
+      You get a success message.
+      ```console
+      [INFO] BUILD SUCCESS
+      Successfully tagged python-hello-app:latest
+      ```
+  4. Run the Docker image: 
+      ```console
+      docker run --rm -p 5000:5000 python-hello-app:latest &amp;
+      ```
+  5. Test the application using the `curl` command:
+      ```console
+      curl -X GET http://localhost:5000
+      ```
+
+      If you get `&lt;h1&gt;Hello World from Flask!&lt;/h1&gt;`, then the Docker image is running. Now you can push the image to Container Registry.
+
+  6. Stop the running application.
+      When you are done testing, get the process ID for your application.
+      ```console
+      ps -ef
+      ```
+      Stop the process.
+      ```console
+      kill &lt;your-pid&gt;
+      ```
+Congratulations! You have successfully created a Python Flask Docker image.
+
+  
+
+## Deploy Your Docker Image
+
+With your Python image created, now you can deploy it.
+
+### Create a Docker Repository
+
+  1. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click**Container Registry**.
+  2. In the left navigation, select `&lt;your-compartment-name&gt;`.
+  3. Click Create Repository.
+  4. Create a **private repository** with your choice of repo name:
+      ```
+      &lt;repo-name&gt; = &lt;image-path-name&gt;/&lt;image-name&gt;
+      ```
+
+      Example: `flask-apps/python-hello-app`
+
+You are now ready to push your local image to Container Registry.
+
+
+&gt; Before you can push a Docker image into a registry repository, **the repository must exist in your compartment**. If the repository does not exist, the Docker push command does not work correctly.
+&gt; The slash in a repository name **does not represent a hierarchical directory structure**. The optional `&lt;image-path-name&gt;` helps to organize your repositories.
+{:.notice}
+
+### Push Your Local Image
+
+With your local Docker image created, push the image to the Container Registry.
+
+Follow these steps.
+
+  1. Open a terminal window.
+  2. Log in to Container Registry:
+      ```console    
+      docker login &lt;region-key&gt;.ocir.io
+      ```
+
+      You are prompted for your login name and password.
+
+        * **Username:** `&lt;tenancy-namespace&gt;/&lt;user-name&gt;`
+        * **Password:** `&lt;auth-token&gt;`
+
+  3. List your local Docker images:
+      ```console    
+      docker images
+      ```
+      The Docker images on your system are displayed. Identify the image you created in the last section: `python-hello-app`
+
+  4. **Tag** your local image with the **URL for the registry** plus the **repo name**, so you can push it to that repo.
+
+      ```console    
+      docker tag &lt;your-local-image&gt; &lt;repo-url&gt;/&lt;repo-name&gt;
+      ```
+      Replace `&lt;repo-url&gt;` with:
+      ```
+      &lt;region-key&gt;.ocir.io/&lt;tenancy-namespace&gt;/
+      ```
+      Replace `&lt;repo-name&gt;` with `&lt;image-folder-name&gt;/&lt;image-name&gt;` from the *Create a Docker Repository* section.  
+  
+      Here is an example after combining both:
+      ```console  
+      docker tag python-hello-app iad.ocir.io/my-namespace/flask-apps/python-hello-app
+      ```
+      In this example, the components are:
+
+       * **Repo URL:** `iad.ocir.io/my-namespace/`
+       * **Repo name:** `flask-apps/python-hello-app`
+
+      &gt;OCI Container Registry now supports creating a registry repo in any compartment rather than only in the root compartment (tenancy). To push the image to the repo you created, combine the registry URL with the exact repo name. OCI Container Registry matches based on the unique repo name and pushes your image.
+      {:.notice}
+
+  5. Check your Docker images to see if the image is **copied**.
+      ```console
+      docker images
+      ```
+     * The tagged or the **copied image** has **the same image ID** as your local image.
+     * The **copied image name** is:
+      
+      ```    
+      &lt;region-key&gt;.ocir.io/&lt;tenancy-namespace&gt;/&lt;image-folder-name&gt;/&lt;image-name&gt;
+      ```
+
+  6. Push the image to Container Registry.
+      ```console  
+      docker push **&lt;copied-image-name&gt;**:latest
+      ```
+      Example:
+      ```console
+      docker push iad.ocir.io/my-namespace/flask-apps/python-hello-app:latest
+      ```
+  7. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click**Container Registry**.
+
+      Find your image in Container Registry after the push command is complete.
+
+### Deploy the Image
+
+With your image in Container Registry, you can now deploy your image and app.
+
+1. Create a registry secret for your application. This secret authenticates your image when you deploy it to your cluster.
+
+   To create your secret, fill in the information in this template .
+
+   ```console   
+   kubectl create secret docker-registry ocirsecret \
+     --docker-server=&lt;region-key&gt;.ocir.io  \
+     --docker-username='&lt;tenancy-namespace&gt;/&lt;user-name&gt;' \
+     --docker-password='&lt;auth-token&gt;'  \
+     --docker-email='&lt;email-address&gt;'
+   ```
+   After the command runs, you get a message similar to: `secret/ocirsecret created`.
+
+2. Verify that the secret is created. Issue the following command:
+
+   ```console   
+   kubectl get secret ocirsecret --output=yaml
+   ```
+   The output includes information about your secret in the yaml format.
+
+3. Determine the host URL to your registry image using the following template:
+
+   ```    
+   &lt;region-code&gt;.ocir.io/&lt;tenancy-namespace&gt;/&lt;repo-name&gt;/&lt;image-name&gt;:&lt;tag&gt;
+   ```
+   Example:
+   ```    
+   iad.ocir.io/my-namespace/flask-apps/python-hello-app:latest
+   ```
+4. On your system, create a file called `app.yaml` with the following text:
+
+   Replace the following place holders:
+       * `&lt;your-image-url&gt;`
+       * `&lt;your-secret-name&gt;`
+
+   ```yaml   
+   apiVersion: apps/v1
+   kind: Deployment
+   metadata:
+     name: app
+   spec:
+     selector:
+       matchLabels:
+         app: app
+     replicas: 3
+     template:
+       metadata:
+         labels:
+           app: app
+       spec:
+         containers:
+         - name: app
+           image: &lt;your-image-url&gt;
+           imagePullPolicy: Always
+           ports:
+           - name: app
+             containerPort: 5000
+             protocol: TCP
+         imagePullSecrets:
+           - name: &lt;your-secret-name&gt;
+   ---
+   apiVersion: v1
+   kind: Service
+   metadata:
+     name: app-lb
+     labels:
+       app: app
+     annotations:
+       service.beta.kubernetes.io/oci-load-balancer-shape: &quot;flexible&quot;
+       service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: &quot;10&quot;
+       service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: &quot;100&quot;
+   spec:
+     type: LoadBalancer
+     ports:
+     - port: 5000
+     selector:
+       app: app
+   ```
+5. Deploy your application with the following command.
+
+   ```console   
+   kubectl create -f app.yaml
+   ```
+   Output: 
+   ```    
+   deployment.apps/app created
+   ```
+
+    &gt;In the `app.yaml` file, the code after the dashes adds a flexible load balancer.
+    {:.notice}
+### Test Your App
+
+After you deploy your app, it might take the load balancer a few seconds to load.
+
+  1. Check if the load balancer is live:
+
+      ```console   
+      kubectl get service
+      ```
+      Repeat the command until load balancer is assigned an IP address.
+
+      &gt;While waiting for the load balancer to deploy, you can check the status of your cluster with these commands: 
+      &gt;    * Get each pods status: `kubectl get pods`
+      &gt;    * Get app status: `kubectl get deployment`
+      {:.notice}
+
+  2. Use the load balancer IP address to connect to your app in a browser:
+      ```
+      http://&lt;load-balancer-IP-address&gt;:5000
+      ```
+      The browser displays: `&lt;h1&gt;Hello World from Flask!&lt;/h1&gt;`
+
+  3. Undeploy your application from the cluster. _**(Optional)**_ To remove your application run this command:
+
+      ```console
+      kubectl delete -f app.yaml
+      ```
+      Output:
+      ```    
+      deployment.apps/python-hello-app deleted
+      service &quot;python-hello-app-lb&quot; deleted
+      ```
+      Your application is now removed from your cluster.
+
+## What's Next
+
+You have successfully created a Hello World Python application, deployed it to a Kubernetes cluster and made it accessible on the internet, using the Flask framework.
+
+Check out these sites to explore more information about development with Oracle products:
+
+  * [Oracle Developers Portal](https://developer.oracle.com/)
+  * [Oracle Cloud Infrastructure](https://www.oracle.com/cloud/)</content><author><name>Oracle Developer Community</name></author><category term="oci" /><category term="open-source" /><category term="kubernetes" /><category term="flask-cloud-shell" /><category term="python" /></entry><entry><title type="html">Experiencing Terraform</title><link href="https://cool.devo.build/collections/tutorials/tf-101/2-experiencing-terraform" rel="alternate" type="text/html" title="Experiencing Terraform" /><published>2021-10-08T08:15:00+00:00</published><updated>2021-10-08T08:15:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/tf-101/2-experiencing-terraform">This short project will let you experience the power of Terraform.
+
+* Create some Terraform code files
+* Learn how to examine what Terraform proposes be done
+* Let Terraform create a VCN and Subnet
+* Organize your Terraform code
+* Get a taste of OCI Cloud Shell
+
+## Prerequisites
+
+You should have an Oracle Cloud Infrastructure (OCI) account setup.  [Click here]({{ site.urls.always_free }}) to create a new cloud account.
+
+We'll be using the [OCI Cloud Shell](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/cloudshellintro.htm) in this tutorial, as it provides a great platform for quickly working with Terraform (as well as many other OCI interfaces and tools), having many of these tools pre-installed and ready-to-go.
+
+[Click here](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/cloudshellgettingstarted.htm) for directions on how to open up the OCI Cloud Shell.  You'll need to have this open during this particular portion of the Terraform 101 tutorial series.
+
+## Setting up the project
+
+Terraform is incredibly easy to use.  Here's what we're going to do in this lesson:
+
+* Create a VCN
+* Create a Subnet in the VCN
+
+Follow the step-by-step directions, to see how easy/fast it is, then in subsequent lessons we'll go into greater detail around how to use Terraform.
+
+&gt; NOTE: All commands will be used within OCI Cloud Shell.  If you haven't opened it up yet, now's the time to [open your own Cloud Shell session](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/cloudshellgettingstarted.htm)!
+{:.notice}
+
+## Setup the OCI provider
+
+Create a new directory for this project:
+
+```console
+mkdir experiencing-tf
+cd experiencing-tf
+```
+
+The `experiencing-tf` directory will have our Terraform files, as well as our Terraform state.  This will be our project directory.
+
+Using your favorite editor (`nano`, `vi`, etc.) add the following to `provider.tf` (`nano provider.tf`):
+
+```terraform
+terraform {
+  required_version = &quot;&gt;= 1.0.0&quot;
+}
+
+provider &quot;oci&quot; {
+  region       = var.region
+  tenancy_ocid = var.tenancy_ocid
+}
+```
+
+Let's start by creating a VCN.  To do so, edit `vcn.tf` (`nano vcn.tf`, note that this file doesn't exist yet - so it'll be a new file according to your text editor) and place the following contents in it:
+
+```terraform
+resource oci_core_vcn &quot;tf_101&quot; {
+  cidr_block     = &quot;192.168.1.0/24&quot;
+  compartment_id = var.tenancy_ocid
+  display_name   = &quot;tf-101&quot;
+  dns_label      = &quot;tf101&quot;
+}
+```
+
+The above tells Terraform that we want a VCN with a name of `tf-101`, using a CIDR block of `192.168.1.0/24`, deployed into the root (tenancy) compartment.
+
+&gt; NOTE: To keep things simple, this example uses the tenancy (root) compartment, which is often times locked down in many tenancies.  If you're using a tenancy with limited permissions (one in which you cannot deploy to the root compartment), you'll need to put in your compartment OCID in place of the `var.tenancy_ocid` above.  Something like `compartment_id = &quot;PUT_YOUR_COMPARTMENT_OCID_HERE&quot;` should do the trick for now!
+{:.notice}
+
+## Set up a subnet
+
+Next we'll create a subnet within our VCN.  To do this, go ahead and add the following to a new file called `subnets.tf` (`nano subnets.tf`):
+
+```terraform
+resource oci_core_subnet &quot;vlan1&quot; {
+  cidr_block      = &quot;192.168.1.0/24&quot;
+  compartment_id  = var.tenancy_ocid
+  display_name    = &quot;vlan1&quot;
+  dns_label       = &quot;vlan1&quot;
+  prohibit_public_ip_on_vnic = true
+  vcn_id = oci_core_vcn.tf_101.id
+}
+```
+
+This will tell Terraform to manage a Subnet that lives within the VCN we've previously defined, using the entire CIDR space.  We've prohibited the use of public IPs in this Subnet and have decided to give it the amazingly original name of `vlan1`.
+
+Up to this point, we've referenced a couple of variables in our resource definitions above: `var.region` and `var.tenancy_ocid`.  We need to go ahead and define these in Terraform code.  To do so, edit `variables.tf` (`nano variables.tf`) and place the following in it:
+
+```terraform
+variable &quot;tenancy_ocid&quot; {
+  type = string
+}
+variable &quot;region&quot; {
+  type = string
+}
+```
+
+## Set up an output
+
+Now that our inputs are defined, let's go ahead and setup an output, which will be the status of the VCN.  To do this, modify `outputs.tf` (`nano outputs.tf`) and place the following in it:
+
+```terraform
+output &quot;vcn_state&quot; {
+  description = &quot;The state of the VCN.&quot;
+  value       = oci_core_vcn.tf_101.state
+}
+```
+
+Save the file and exit your text editor.  
+
+The OCI Cloud Shell session is prepopulated with lots of good values that make life super simple.  We need to put this in a format that Terraform cac easily use.  The following commands will setup a few environment variables that Terraform will be using:
+
+```console
+declare -x TF_VAR_tenancy_ocid=`echo $OCI_TENANCY`
+declare -x TF_VAR_region=`echo $OCI_REGION`
+```
+
+## Action!
+
+Now it's time to see this all work!  Initialize Terraform by running:
+
+```console
+terraform init
+```
+
+It looks something like:
+
+```console
+$ terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Finding latest version of hashicorp/oci...
+- Installing hashicorp/oci v4.45.0...
+- Installed hashicorp/oci v4.45.0 (unauthenticated)
+
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above. Include this file in your version control repository
+so that Terraform can guarantee to make the same selections by default when
+you run &quot;terraform init&quot; in the future.
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running &quot;terraform plan&quot; to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+$ 
+```
+
+At this point Terraform is ready for us to give it directions on what OCI resources we want it to manage.  Let's look at the plan that Terraform proposes:
+
+```console
+$ terraform plan
+```
+
+The output will be something similar to the following:
+
+```console
+$ terraform plan
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # oci_core_subnet.vlan1 will be created
+  + resource &quot;oci_core_subnet&quot; &quot;vlan1&quot; {
+      + availability_domain        = (known after apply)
+      + cidr_block                 = &quot;192.168.1.0/24&quot;
+      + compartment_id             = &quot;ocid1.tenancy.oc1..&lt;sanitized&gt;&quot;
+      + defined_tags               = (known after apply)
+      + dhcp_options_id            = (known after apply)
+      + display_name               = &quot;vlan1&quot;
+      + dns_label                  = &quot;vlan1&quot;
+      + freeform_tags              = (known after apply)
+      + id                         = (known after apply)
+      + ipv6cidr_block             = (known after apply)
+      + ipv6virtual_router_ip      = (known after apply)
+      + prohibit_internet_ingress  = (known after apply)
+      + prohibit_public_ip_on_vnic = true
+      + route_table_id             = (known after apply)
+      + security_list_ids          = (known after apply)
+      + state                      = (known after apply)
+      + subnet_domain_name         = (known after apply)
+      + time_created               = (known after apply)
+      + vcn_id                     = (known after apply)
+      + virtual_router_ip          = (known after apply)
+      + virtual_router_mac         = (known after apply)
+    }
+
+  # oci_core_vcn.tf_101 will be created
+  + resource &quot;oci_core_vcn&quot; &quot;tf_101&quot; {
+      + cidr_block               = &quot;192.168.1.0/24&quot;
+      + cidr_blocks              = (known after apply)
+      + compartment_id           = &quot;ocid1.tenancy.oc1..&lt;sanitized&gt;&quot;
+      + default_dhcp_options_id  = (known after apply)
+      + default_route_table_id   = (known after apply)
+      + default_security_list_id = (known after apply)
+      + defined_tags             = (known after apply)
+      + display_name             = &quot;tf-101&quot;
+      + dns_label                = &quot;tf101&quot;
+      + freeform_tags            = (known after apply)
+      + id                       = (known after apply)
+      + ipv6cidr_blocks          = (known after apply)
+      + is_ipv6enabled           = (known after apply)
+      + state                    = (known after apply)
+      + time_created             = (known after apply)
+      + vcn_domain_name          = (known after apply)
+    }
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + vcn_state = (known after apply)
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run &quot;terraform apply&quot;
+now.
+$ 
+```
+
+What we're able to see here is that Terraform is proposing to create two new resources: a VCN and a Subnet.  Both of these are expected and things appear to be in order, so we'll go ahead and apply it (tell Terraform to make the changes), by running:
+
+```console
+$ terraform apply
+```
+
+We'll see something like what we saw for plan, but have a prompt asking if we'd like to continue:
+
+```console
+&lt;snip&gt;
+Changes to Outputs:
+  + vcn_state = (known after apply)
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: 
+```
+
+Once we accept the proposed changes, we'll see something like:
+
+```console
+&lt;snip&gt;
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+oci_core_vcn.tf_101: Creating...
+oci_core_vcn.tf_101: Creation complete after 2s [id=ocid1.vcn.oc1.phx.&lt;sanitized&gt;]
+oci_core_subnet.vlan1: Creating...
+oci_core_subnet.vlan1: Creation complete after 2s [id=ocid1.subnet.oc1.phx.&lt;sanitized&gt;]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+vcn_state = &quot;AVAILABLE&quot;
+$ 
+```
+
+Wow, that was easy!  One command to set up multiple resources... terrific!  
+
+## Cleaning Up
+
+Since we're at the end of this short session, we want to clean up after ourselves.  Let's go ahead and remove the VCN and Subnet.  This could be multiple clicks on the OCI Console, however since we're using Terraform, one command is all we need to run:
+
+```console
+$ terraform destroy
+```
+
+You'll see something like the following:
+
+```console
+$ terraform destroy
+oci_core_vcn.tf_101: Refreshing state... [id=ocid1.vcn.oc1.phx.&lt;sanitized&gt;]
+oci_core_subnet.vlan1: Refreshing state... [id=ocid1.subnet.oc1.phx.&lt;sanitized&gt;]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # oci_core_subnet.vlan1 will be destroyed
+  - resource &quot;oci_core_subnet&quot; &quot;vlan1&quot; {
+      - cidr_block                 = &quot;192.168.1.0/24&quot; -&gt; null
+      - compartment_id             = &quot;ocid1.compartment.oc1..&lt;sanitized&gt;&quot; -&gt; null
+      - defined_tags               = {
+          - &quot;Oracle-Tags.CreatedBy&quot; = &quot;&lt;sanitized&gt;&quot;
+          - &quot;Oracle-Tags.CreatedOn&quot; = &quot;2021-09-30T19:44:47.597Z&quot;
+        } -&gt; null
+      - dhcp_options_id            = &quot;ocid1.dhcpoptions.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - display_name               = &quot;vlan1&quot; -&gt; null
+      - dns_label                  = &quot;vlan1&quot; -&gt; null
+      - freeform_tags              = {} -&gt; null
+      - id                         = &quot;ocid1.subnet.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - prohibit_internet_ingress  = true -&gt; null
+      - prohibit_public_ip_on_vnic = true -&gt; null
+      - route_table_id             = &quot;ocid1.routetable.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - security_list_ids          = [
+          - &quot;ocid1.securitylist.oc1.phx.&lt;sanitized&gt;&quot;,
+        ] -&gt; null
+      - state                      = &quot;AVAILABLE&quot; -&gt; null
+      - subnet_domain_name         = &quot;vlan1.tf101.oraclevcn.com&quot; -&gt; null
+      - time_created               = &quot;2021-09-30 19:44:47.659 +0000 UTC&quot; -&gt; null
+      - vcn_id                     = &quot;ocid1.vcn.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - virtual_router_ip          = &quot;192.168.1.1&quot; -&gt; null
+      - virtual_router_mac         = &quot;00:00:17:28:74:9C&quot; -&gt; null
+    }
+
+  # oci_core_vcn.tf_101 will be destroyed
+  - resource &quot;oci_core_vcn&quot; &quot;tf_101&quot; {
+      - cidr_block               = &quot;192.168.1.0/24&quot; -&gt; null
+      - cidr_blocks              = [
+          - &quot;192.168.1.0/24&quot;,
+        ] -&gt; null
+      - compartment_id           = &quot;ocid1.compartment.oc1..&lt;sanitized&gt;&quot; -&gt; null
+      - default_dhcp_options_id  = &quot;ocid1.dhcpoptions.oc1.phx.&lt;saanitized&gt;&quot; -&gt; null
+      - default_route_table_id   = &quot;ocid1.routetable.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - default_security_list_id = &quot;ocid1.securitylist.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - defined_tags             = {
+          - &quot;Oracle-Tags.CreatedBy&quot; = &quot;&lt;sanitized&gt;&quot;
+          - &quot;Oracle-Tags.CreatedOn&quot; = &quot;2021-09-30T19:44:46.481Z&quot;
+        } -&gt; null
+      - display_name             = &quot;tf-101&quot; -&gt; null
+      - dns_label                = &quot;tf101&quot; -&gt; null
+      - freeform_tags            = {} -&gt; null
+      - id                       = &quot;ocid1.vcn.oc1.phx.&lt;sanitized&gt;&quot; -&gt; null
+      - ipv6cidr_blocks          = [] -&gt; null
+      - is_ipv6enabled           = false -&gt; null
+      - state                    = &quot;AVAILABLE&quot; -&gt; null
+      - time_created             = &quot;2021-09-30 19:44:46.736 +0000 UTC&quot; -&gt; null
+      - vcn_domain_name          = &quot;tf101.oraclevcn.com&quot; -&gt; null
+    }
+
+Plan: 0 to add, 0 to change, 2 to destroy.
+
+Changes to Outputs:
+  - vcn_state = &quot;AVAILABLE&quot; -&gt; null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: 
+```
+
+After entering `yes` in the prompt, Terraform will destroy the resources for us:
+
+```console
+&lt;snip&gt;
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: yes
+
+oci_core_subnet.vlan1: Destroying... [id=ocid1.subnet.oc1.phx.&lt;sanitized&gt;]
+oci_core_subnet.vlan1: Destruction complete after 1s
+oci_core_vcn.tf_101: Destroying... [id=ocid1.vcn.oc1.phx.&lt;sanitized&gt;]
+oci_core_vcn.tf_101: Destruction complete after 1s
+
+Destroy complete! Resources: 2 destroyed.
+$
+```
+
+## Summary
+
+If this was your first time using Terraform, that was a *LOT* to take in!  It was worth it, as we got a lot done:
+
+* Created five (5) Terraform code files that defined our inputs, outputs and resources we want Terraform to manage
+* Learned how to examine what Terraform proposes be done (`terraform plan`)
+* Let Terraform create a VCN and Subnet for us (very quickly)
+* Fun facts: It took Terraform under 10 seconds to provision a VCN and Subnet (try it yourself by running `time terraform apply -auto-approve`) and under 7 seconds to destroy (try it yourself by running `time terraform destroy -auto-approve`) those same resources.  Try to beat that doing it by hand in the OCI Console!
+* Organized our Terraform code into logical files (so it's easy to navigate the code)
+* Got a taste for how handy and easy it is to use the OCI Cloud Shell
+
+Hopefully this short tutorial gave you a glimpse into the basic flow around using Terraform and how powerful it can be.  This was a super simple example, but was a solid first start at using Terraform.  The [next lesson](3-understanding-terraform-basics.md) digs into some of the core concepts and components in a Terraform project.</content><author><name>Tim Clegg</name></author><category term="iac" /><category term="opensource" /><category term="open-source" /><category term="terraform" /><category term="iac" /><category term="devops" /><category term="beginner" /></entry><entry><title type="html">Install Jupyter Lab in OCI</title><link href="https://cool.devo.build/collections/tutorials/install-jupyter-lab-on-oci" rel="alternate" type="text/html" title="Install Jupyter Lab in OCI" /><published>2021-10-07T14:27:00+00:00</published><updated>2021-10-07T14:27:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/install-jupyter-lab-on-oci">This tutorial will guide you through setting up your environment to run Jupyter Lab on Oracle Cloud Infrastructure.
+
+## Prerequisites
+
+You'll need a Virtual Machine 2.1 with Oracle Linux 7.9 (OEL7) deployed in Oracle Cloud Infrastructure (OCI).
+
+- Oracle Linux 7.9 using pip3.6 by default. 
+- Python 3.6 or higher installed
+- Access to root, either directly or via sudo. By default in OCI, you are connected as the &quot;opc&quot; user with sudo privilege.
+
+The install is pretty simple. It consists of setting up python and installing python components and libraries. 
+
+Lets start with setting up the Python Environment
+
+## Python Setup
+
+By default, OEL7 runs Python 3. The first step is to install `pip` and `virtualenv`.
+
+1. Install `virtualenv`
+
+	Virtualenv enables us to create isolated sandboxes for developing Python applications without running into module or library conflicts. It's very simple to install:
+
+	```console
+	sudo pip3.6 install virtualenv
+	```
+
+2. Next we can create a virtual environment called &quot;myvirtualenv&quot;
+
+	```console
+	virtualenv -p /usr/bin/python3 myvirtualenv
+	# Activate the env
+	source myvirtualenv/bin/activate
+	```
+
+3. Check list of Python Libraries in your environment
+
+	Running the following command will show what Python models we have installed at this point.
+
+	```console
+	(myvirtualenv)$ pip3 list
+	Package    Version
+	---------- -------
+	pip        21.1.3
+	setuptools 57.1.0
+	wheel      0.36.2
+	WARNING: You are using pip version 21.1.3; however, version 21.2.1 is available.
+	You should consider upgrading via the '/home/opc/myvirtualenv/bin/python -m pip install --upgrade pip' command.
+	```
+
+4. Upgrade your PIP Environment for this virtual environment:
+
+	```console
+	/home/opc/myvirtualenv/bin/python -m pip install --upgrade pip
+	```
+
+## Jupyter Lab Setup
+
+1. Use `pip` to install Jupyter Lab:
+
+	```console
+	pip3 install jupyterlab
+	```
+
+2. Install Python Libraries for Machine Learning or ETL Process:
+
+	```console
+	pip install pandas
+	pip install pandarallel
+	pip install dask
+	pip install seaborn
+	pip install matplotlib
+	pip install plotly
+	
+	pip install -lxml==4.6.3
+	pip install selenium
+	pip install beautifulsoup4
+	
+	pip install scikit-learn
+	```
+
+3. Install other Python libraries for Kafka Access and WEB Server Access:
+
+	```console
+	pip install kafka-python (v2.0.0)
+	pip install Flask
+	pip install gunicorn
+	```
+
+4. Install extensions for Jupyter Lab environment:
+
+	```console
+	pip install jupyter_contrib_nbextensions
+	jupyter contrib nbextension install --user
+	jupyter nbextension enable execute_time/ExecuteTime
+	```
+
+## Configure Jupyter Lab like an OEL7 Linux Service
+
+1. Create a script to instantiate automatically and reboot jupyterlab with the `opc` user.
+
+	```console
+	vi /home/opc/launchjupyterlab.sh
+	```
+
+2. Add the contents below to `launchjupyterlab.sh`. You must use the `virtualenv` you created, and you can launch Jupyter Lab on a specific port (for example: 8001) and listen on your VM's public IP.
+
+	```bash
+	#!/bin/bash
+	
+	# Activate myvirtualenv Environment
+	source myvirtualenv/bin/activate
+	
+	cd /home/opc
+	
+	if [ &quot;$1&quot; = &quot;start&quot; ]; then
+		nohup jupyter-lab --ip=0.0.0.0 --port=8001 &gt; ./nohup.log 2&gt;&amp;1 &amp;
+		echo $! &gt; /home/opc/jupyter.pid
+	else
+		kill $(cat /home/opc/jupyter.pid)
+	fi
+	```
+
+3. Make the script executable so it can be run from the jupyterlab service:
+
+	```console
+	chmod 777 /home/opc/launchjupyterlab.sh
+	```
+
+
+4. Connect to &quot;root&quot; user:
+
+	```console
+	sudo -i
+	```
+
+5. Create a script to start and stop the &quot;jupyterlab&quot; service:
+
+	```console
+	vi /etc/systemd/system/jupyterlab.service
+	```
+
+
+6. Add the following to `jupyterlab.service`:
+
+	```console
+	[Unit]
+	Description=Service to start jupyterlab for opc
+	Documentation=
+	[Service]
+	User=opc
+	Group=opc
+	Type=forking
+	WorkingDirectory=/home/opc
+	ExecStart=/home/opc/launchjupyterlab.sh start
+	ExecStop=/home/opc/launchjupyterlab.sh stop
+	[Install]
+	WantedBy=multi-user.target
+	```
+
+7. Test the Jupyter Lab Service
+
+	```console
+	systemctl start jupyterlab
+	systemctl status jupyterlab
+	systemctl enable jupyterlab
+	```
+
+## Reboot your VM
+
+1. Reboot your machine to check if `jupyterlab` script is enabled by default on port we defined (8001).
+
+2. Open port 8001 to your virtual machine VM 2.1 so you can access Jupyter Lab using your Public IP.
+
+	```console
+	firewall-cmd  --permanent --zone=public --list-ports
+	firewall-cmd --get-active-zones
+	firewall-cmd --permanent --zone=public --add-port=8001/tcp
+	firewall-cmd --reload
+	```
+
+3. If you're running directly on a virtual machine and have a browser installed, it should take you directly into the Jupyter environment. Connect to `http://xxx.xxx.xxx.xxx:8001/` (replacing `xxx` with your public IP).
+
+You should now see the Python Web environment &quot;Jupyter Lab&quot;.</content><author><name>Oracle Developer Community</name></author><category term="ai-ml" /><category term="oci" /><category term="get-started" /><category term="jupyter" /><category term="python" /><category term="data-science" /><category term="machine-learning" /><category term="open-source" /></entry><entry><title type="html">Get Started with your own LAMP stack application on Oracle Cloud</title><link href="https://cool.devo.build/collections/tutorials/get-started-with-lamp-on-oci" rel="alternate" type="text/html" title="Get Started with your own LAMP stack application on Oracle Cloud" /><published>2021-10-01T09:18:00+00:00</published><updated>2021-10-01T09:18:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/get-started-with-lamp-on-oci">I've written [several articles](https://lefred.be/deploy-to-oci/) about how to deploy popular Open Source applications on Oracle Cloud Infrastructure and MySQL Database Service.
+
+Now we will see how you can deploy your own LAMP stack application using the same technique where **L** will stand for a compute instance (and why not the [Ampere always free trier](https://lefred.be/content/deploy-on-oci-using-ampere-compute-instances/)?), **A** stays Apache and will run in that compute instance. **M** stands for MySQL Database Service and **P** is for PHP.
+
+As usual we start by deploying a Stack by just clicking on the deploy button [from GitHub](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-11-43.png)
+
+Then we are redirected to OCI’s dashboard and we need to accept the Terms of Use:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-11-56.png)
+
+As soon as we accept the Terms of Use, we see the information being updated, and we can directly click on Next:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-12-04.png)
+
+On the next screen, we can set all the variables. Some are mandatory and the others are already pre-filled:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-12-19.png)
+
+This is also where you can choose which version of PHP you want to use:
+
+![](assets/get-started-with-lamp-on-oci-Selection_048.png)
+
+You validate everything, and then Create the stack and deploy the architecture on OCI:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-13-12.png) ![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-28-39.png)
+
+As you can see, we have all the generated and required information in the **Outputs** section.
+
+We can already use the public IP in a browser and we should see the following page:
+
+![](assets/get-started-with-lamp-on-oci-Selection_049.png)
+
+Now the Web server is ready to get our code. From the stack’s outputs, we already know the IP, the username, and password to use to connect to MySQL Database Service.
+
+We also need the ssh key that we can copy locally to ssh to the Web Server to deploy our code, or we can use the Cloud Shell from OCI’s dashboard. Let’s use it:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-31-30.png)
+
+We create a file for the ssh key (`php.key`) and we paste its content in it:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-28-39-1.png) ![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-31-38.png)
+
+We change the permission of the key’s file and we use it to connect to our web server using its public IP:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-32-03.png)
+
+As an application, we will use [this gist file which is a PHP script](https://gist.github.com/lefred/b97fe90f31115607e0d28ddc8a72ca16) that connects to MDS and we will place it in `**/var/www/html**`:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-32-58.png)
+
+We edit it, and there are 3 variables to modify using the values from the Stack’s outputs:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-41-03.png)
+
+When done, we can refresh the page on the browser and we will see our code being processed:
+
+![](assets/get-started-with-lamp-on-oci-Screenshot-from-2021-05-28-13-54-44.png)
+
+The Web server box already contains `git` and `certbot`.
+
+Now you are able to deploy your own LAMP stack easily to OCI, enjoy!</content><author><name>lefred</name></author><category term="cloudapps" /><category term="data-management" /><category term="front-end" /><category term="mysql" /><category term="oci" /><category term="orm" /></entry><entry><title type="html">Kubernetes - Deploy a Node Express Application</title><link href="https://cool.devo.build/collections/tutorials/deploy-a-node-express-application" rel="alternate" type="text/html" title="Kubernetes - Deploy a Node Express Application" /><published>2021-09-30T01:00:00+00:00</published><updated>2021-09-30T01:00:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/deploy-a-node-express-application">In this tutorial, you use an Oracle Cloud Infrastructure account to set up a Kubernetes cluster. Then, you deploy a Node Express application to your cluster.
+
+Key tasks include how to:
+
+* Set up a Kubernetes cluster on OCI.
+* Set up OCI CLI to access your cluster.
+* Build a Node Express application and Docker Image.
+* Push your image to OCIR.
+* Deploy your Node.js Docker application to your cluster.
+* Connect to your application from the internet.
+
+![](assets/deploy-a-node-express-application-Node-K8s-diagram.png)
+
+For additional information, see:
+
+* [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+* [OCI Container Engine for Kubernetes](https://docs.oracle.com/iaas/Content/ContEng/Concepts/contengoverview.htm)
+* [OCI Container Registry](https://docs.oracle.com/iaas/Content/Registry/Concepts/registryoverview.htm)
+
+## Before You Begin
+
+To successfully perform this tutorial, you must have the following:
+
+### Requirements
+
+* For Container Registry, Kubernetes and Load Balancers:
+    * A **paid** Oracle Cloud Infrastructure account. 
+    * See [Signing Up for Oracle Cloud Infrastructure](https://docs.oracle.com/iaas/Content/GSG/Tasks/signingup.htm).
+* For building applications and Docker images:
+    * One of the following local environments:
+        * A MacOS or Linux machine.
+        * A Windows machine with Linux support. For example:
+            * [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+            * [Oracle Virtual Box](https://www.virtualbox.org/)
+    * The following applications on your local environment:
+        * JDK 11 and set JAVA_HOME in .bashrc.
+        * Python 3.6.8+ and pip installer for Python 3
+        * Kubernetes Client 1.11.9+
+        * Apache Maven 3.0+
+        * Docker 19.0.3+
+        * Git 1.8+
+        * Node.js 10+
+
+&gt; Note: If you don't want to set up the required applications on your local environment, you can use Oracle Cloud Infrastructure **Cloud Shell** instead. The advantage of using Cloud Shell is all the required tools to manage your application are already installed and ready to use. Follow the steps in:
+&gt;
+&gt;[Kubernetes Using Cloud Shell: Deploy a Spring Boot Application](https://docs.oracle.com/iaas/developer-tutorials/tutorials/spring-on-k8s-cs/01oci-spring-cs-k8s-summary.htm)
+{:.notice}
+
+
+### Get the Applications for Linux on OCI Free Tier
+
+If you want to use an OCI Free Tier Linux compute instance to manage your deployment, the following sections provide information to get the required software installed.
+
+#### Install a Linux Instance
+
+Install a Linux VM with an **Always Free** compute shape, on Oracle Cloud Infrastructure. You will need a machine with `ssh` support to connect to your Linux instance.
+
+* To [install an Oracle Linux VM](https://docs.oracle.com/iaas/developer-tutorials/tutorials/apache-on-oracle-linux/01oci-ol-apache-summary.htm#create-oracle-linux-vm)
+    * Follow sections 2 and 3.
+    * If you have a paid account, for section 2, choose your compute options based on your offerings.
+    * To connect to your instance, in section 4, follow steps 1-5.
+    * Skip the Apache instructions.
+* To [install an Ubuntu VM](https://docs.oracle.com/iaas/developer-tutorials/tutorials/helidon-on-ubuntu/01oci-ubuntu-helidon-summary.htm#create-ubuntu-vm)
+    * Follow sections 2 and 3.
+    * If you have a paid account, for section 2, choose compute options based on your offerings.
+    * To connect to your instance, in section 4, follow steps 1-5.
+    * Skip the Apache instructions.
+    * To update the firewall settings, in section 4, perform step 8.
+
+
+## Install Node.js on your system.
+
+First, you will run install commands. To install Node.js and NPM, run the following commands, using the appropriate system:
+
+### Oracle Linux:
+
+```console 
+sudo yum update
+```
+
+Set up the Yum repo for Node.js. Then install the `nodejs` package.
+
+```console
+sudo yum install -y oracle-nodejs-release-el7
+sudo yum install -y nodejs
+```
+
+### Ubuntu:
+
+```console 
+sudo apt update
+```
+
+Install the `nodejs` and the `npm` packages.
+
+```console
+sudo apt install -y nodejs
+sudo apt install -y npm
+```
+Verify the installation.
+
+```console
+node -v
+npm -v
+```
+
+## Configure Firewall (Optional)
+
+&gt; Note: If you want to do browser-based testing of your Node application, make port 3000 available on your Linux instance.
+{:.notice}
+
+### Oracle Linux:
+
+```console
+sudo firewall-cmd --add-service=http --permanent
+sudo firewall-cmd --add-service=https --permanent
+sudo firewall-cmd --reload
+```
+
+### Ubuntu Linux:
+
+```console
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 3000 -j ACCEPT
+sudo netfilter-persistent save
+```
+
+## Create an Ingress Rule for your VCN (Optional)
+
+Follow these steps to select your VCN's public subnet and add the ingress rule.
+
+1. Open the navigation menu and click **Networking**, and then click **Virtual Cloud Networks**.
+2. Select the VCN you created with your compute instance.
+3. With your new VCN displayed, click **`&lt;`your-subnet-name`&gt;`** subnet link. The public subnet information is displayed with the Security Lists at the bottom of the page. A link to the **Default Security List** for your VCN is displayed.
+4. Click the **Default Security List** link. 
+  * The default **Ingress Rules** for your VCN are displayed.
+5. Click **Add Ingress Rules**.
+  * An **Add Ingress Rules** dialog is displayed.
+6. Fill in the ingress rule with the following information:
+
+    ```console
+    Stateless: Checked
+    Source Type: CIDR
+    Source CIDR: 0.0.0.0/0
+    IP Protocol: TCP
+    Source port range: (leave-blank)
+    Destination Port Range: 3000
+    Description: Allow HTTP connections
+    ```
+7. Click Add Ingress Rule. 
+
+Now HTTP connections are allowed. Your VCN is configured for Node Express.
+
+You have successfully created an ingress rule that makes your instance available from the internet.
+
+## Install Python 3 and Pip 3
+
+1. Verify your current installation.
+
+    ```console
+    python3 --version
+    ```
+2. For Python 3, run the following commands:
+
+    - Oracle Linux: 
+
+        ```console
+        sudo yum update
+
+        sudo yum install -y python3
+        ```
+
+    - Ubuntu:
+
+        ```console    
+        sudo apt update
+
+        sudo apt install -y python3
+        ```
+
+
+3. Verify the pip installation for Python3.
+
+    ```console
+    pip3 -V
+    ```
+
+    Example output if pip for Python3 is installed:
+
+    ```console
+    pip &lt;version&gt; from xxx/lib/python3.x/site-packages/pip   (python 3.x)
+    ```
+
+4. To install Pip for Python 3, run the following commands:
+
+    * Oracle Linux: 
+
+        ```console
+        sudo yum update
+
+        sudo yum install -y python3-pip
+        ```
+
+    * Ubuntu:
+
+        ```console
+        sudo apt update
+
+        sudo apt install -y python3-pip
+        ```
+
+5. Verify the pip for Python 3 installation.
+
+    ```console
+    pip3 -V
+    ```
+
+## Install Kubernetes Client
+
+1. Verify your current installation:
+
+
+    ```console
+    kubectl version --client
+    ```
+
+    If you have Kubernetes, then the version is `&lt;major-version&gt;.&lt;minor-version&gt;`. For example, for version 1.20, you get the following:
+
+    ```console 
+    version.Info{Major:&quot;1&quot;, Minor:&quot;20&quot;...
+    ```
+
+2. To install he `kubectl` client, refer to the following links: 
+    - [Install Kubernetes client on Linux](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-binary-with-curl-on-linux)
+    - [Install Kubernetes client on MacOS](https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/)
+3. Verify the installation. 
+
+    ```console
+    kubectl version --client
+    ```
+
+## Install Docker
+
+1. Verify your current installation: 
+
+    ```console
+    docker -v
+    ```
+
+    * Oracle Linux
+
+        ```console    
+        sudo yum install docker-engine
+            
+        sudo systemctl start docker
+
+        sudo systemctl enable docker
+        ```
+
+        &gt; Note: The last command enables Docker to start on reboots.
+        {:.notice}
+
+
+    * Ubuntu Linux
+
+        To install Docker on Ubuntu Linux, refer to the following link: [Get Docker](https://docs.docker.com/get-docker/)
+
+2. Verify the installation.
+
+    ```console
+    docker -v
+    ```
+
+## Prepare
+
+Prepare your environment to create and deploy your application.
+
+### Check your Service Limits
+
+1. Log in to the Oracle Cloud Infrastructure **Console**.
+2. Open the navigation menu, and click Governance and Administration. Under Governance, click Limits, Quotas and Usage.
+3. Find your service limit for **Regions**:
+
+    **Filter** for the following options:
+
+    * **Service:** Regions
+    * **Scope:** Tenancy
+    * **Resource:** Subscribed region count
+    * **Compartment:** `&lt;tenancy-name&gt;` (root)
+
+    Find service limit:
+    
+    *  **Limit Name:** `subscribed-region-count`
+    *  **Service Limit:** minimum 2
+4. Find your available **Compute** **core count** for the **VM.Standard.E3.Flex** shape:
+    
+    **Filter** for the following options:
+    
+    * **Service:** Compute
+    * **Scope:** `&lt;first-availability-domain&gt;`. Example: `EMlr:US-ASHBURN-AD-1`
+    * **Resource:** **Cores** for **Standard.E3.Flex** and BM.Standard.E3.128 Instances
+    * **Compartment:** `&lt;tenancy-name&gt;` (root)
+    
+    Find available core count:
+    
+    * **Limit Name:** `standard-e3-core-ad-count`
+    * **Available:** minimum 1
+
+    Repeat for **Scope:** `&lt;second-availability-domain&gt;` and `&lt;third-availability-domain&gt;`. Each region must have at least one core available for this shape.
+5. Find out if you have **50 GB** of **Block Volume** available:
+    
+    **Filter** for the following options:
+
+    * **Service:** Block Volume
+    * **Scope:** `&lt;first-availability-domain&gt;`. Example: `EMlr:US-ASHBURN-AD-1`
+    * **Resource** Volume Size (GB)
+    * **Compartment:** `&lt;tenancy-name&gt;` (root)
+    
+    Find available block volume storage:
+    
+    * **Limit Name:** `total-storage-gb`
+    * **Available:** minimum 50
+    
+    Repeat for **Scope:** `&lt;second-availability-domain&gt;` and `&lt;third-availability-domain&gt;`. Each region must have at least 50 GB of block volume available.
+6. Find out how many **Flexible Load Balancers** you have available:
+    
+    **Filter** for the following options:
+    
+      * **Service:** LBaaS
+      * **Scope:** `&lt;your-region&gt;`. Example: `us-ashburn-1`
+      * **Resource:** `&lt;blank&gt;` 
+      * **Compartment:** `&lt;tenancy-name&gt;` (root)
+    
+    Find the number of available flexible load balancers:
+
+      * **Limit Name:** `lb-flexible-count`
+      * **Available:** minimum 1
+
+&gt; Note: This tutorial creates three compute instances with a **VM.Standard.E3.Flex** shape for the cluster nodes. To use another shape, filter for its **core count**. For example, for **VM.Standard2.4**, filter for **Cores for Standard2 based VM and BM Instances** and get the **count**. 
+{:.notice}
+
+For a list of all shapes, see [VM Standard Shapes](https://docs.oracle.com/iaas/Content/Compute/References/computeshapes.htm#vmshapes__vm-standard).
+
+&gt; Note: This tutorial creates a load balancer with a **flexible** shape. To use another bandwidth, filter for its **count**, for example **100-Mbps bandwidth** or **400-Mbps bandwidth**. 
+{:.notice}
+
+### Create an Authorization Token
+
+1. In the Console's top navigation bar, click the **Profile** menu (your avatar). 
+2. Click your username. 
+3. Click Auth Tokens. 
+4. Click Generate Token. 
+5. Give it a description. 
+6. Click Generate Token. 
+7. Copy the token and **save** it. 
+8. Click Close. 
+
+&gt; Note: Ensure that you save your token right after you create it. You have no access to it later.
+{:.notice}
+
+### Gather Required Information
+
+1. Collect the following credential information from the Oracle Cloud Infrastructure **Console**. 
+    * **Tenancy name:** `&lt;tenancy-name&gt;`
+        * Click your **Profile** menu (your avatar) and find your **Tenancy:`&lt;tenancy-name&gt;`**.
+    * **Tenancy namespace:** `&lt;tenancy-namespace&gt;`
+        * Click your **Profile** menu (your avatar).
+        * Click **Tenancy:`&lt;tenancy-name&gt;`**.
+        * Copy the value for **Object Storage Namespace**.
+
+        &gt; Note For some accounts, tenancy name and namespace differ. Ensure that you use namespace in this tutorial.
+        {:.notice}
+
+    * **Tenancy OCID:** `&lt;tenancy-ocid&gt;`
+        - Click your **Profile** menu (your avatar), then click **Tenancy:`&lt;tenancy-name&gt;`**, and copy OCID.
+    * **Username:** `&lt;user-name&gt;`
+        - Click your **Profile** menu (your avatar).
+    * **User OCID:** `&lt;user-ocid&gt;`
+        - Click your **Profile** menu (your avatar), then click **User Settings**, and copy OCID.
+
+2. Find your region information. 
+
+    * **Region:** `&lt;region-identifier&gt;`
+        - In the Console's top navigation bar, find your region. Example: **US East (Ashburn)**.
+        - Find your **Region Identifier** from the table in [Regions and Availability Domains](https://docs.oracle.com/iaas/Content/General/Concepts/regions.htm). 
+        - Example: `us-ashburn-1`.
+    * **Region Key:** `&lt;region-key&gt;`
+        - Find your **Region Key** from the table in [Regions and Availability Domains](https://docs.oracle.com/iaas/Content/General/Concepts/regions.htm). 
+        - Example: `iad`
+
+3. Copy your authentication token from **Create an Authentication Token** section. 
+
+    **Auth Token:** `&lt;auth-token&gt;`
+
+## Set up OCI Command Line Interface
+
+### Install a Python Virtual Environment and Wrapper
+
+The Python `virtualenv` creates a folder that contains all the executables and libraries for your project.
+
+The `virtualenvwrapper` is an extension to `virtualenv`. It provides a set of commands, which makes working with virtual environments much more pleasant. It also places all your virtual environments in one place. The `virtualenvwrapper` provides tab-completion on environment names.
+
+1. Install `virtualenv`.
+
+
+    ```console
+    pip3 install --user virtualenv
+    ```
+
+2. Install `virtualenvwrapper`.
+
+    ```console
+    pip3 install --user virtualenvwrapper
+    ```
+
+3. Find the location of the `virtualenvwrapper.sh` script.
+
+
+    ```console
+    grep -R virtualenvwrapper.sh
+    ```
+
+    Example paths: 
+
+        Linux example: 
+            /home/ubuntu/.local/bin/virtualenvwrapper.sh
+        MacOS example: 
+            /usr/local/bin/virtualenvwrapper.sh
+
+
+4. Configure the virtual environment wrapper in `.bashrc`.
+
+
+    ```console    
+    sudo vi .bashrc
+    ```
+
+    Append the following text.
+
+    ```console 
+    # set up Python env
+    export WORKON_HOME=~/envs
+    export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
+    export VIRTUALENVWRAPPER_VIRTUALENV_ARGS=' -p /usr/bin/python3 '
+    source &lt;path-to-virtualenvwrapper.sh&gt;
+    ```
+
+    Replace `&lt;path-to-virtualenvwrapper.sh&gt;` with its value.
+
+    Based on the location of Python3 binaries in your environment, update `/usr/bin/python3` to its correct location.
+
+    Save the file.
+
+5. Activate the commands in the current window.
+
+
+    ```console
+    source ~/.bashrc
+    ```
+
+    Example output:
+
+    ```console  
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/premkproject
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/postmkproject
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/initialize
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/premkvirtualenv
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/postmkvirtualenv
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/prermvirtualenv
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/postrmvirtualenv
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/predeactivate
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/postdeactivate
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/preactivate
+    virtualenvwrapper.user_scripts creating /home/ubuntu/envs/postactivate
+    ```
+    
+
+### Install OCI CLI
+
+1. Start a virtual environment.
+
+
+    ```console
+    workon cli-app
+    ```
+
+2. Confirm that the name of your virtual environment, `cli-app` appears in the left of your command prompt.
+
+    Example: `(cli-app) ubuntu@&lt;ubuntu-instance-name&gt;:~$`
+
+3. Install OCI CLI.
+
+    ```console
+    pip3 install oci-cli
+    ```
+
+4. Test the installation:
+    
+    ```console
+    oci --version
+    ```
+
+    If everything is set up correctly, you get the version.
+
+    ```console
+    oci --help
+    ```
+
+#### Configure the OCI CLI
+
+1. Enter the following command in your **virtual environment**:
+
+    ```console
+    oci setup config
+    ```
+
+2. Enter your answers from the **Gather Required Information** section:
+  * **Location for your config [$HOME/.oci/config]:** `&lt;take-default&gt;`
+  * **User OCID:** `&lt;user-ocid&gt;`
+  * **Tenancy OCID:** `&lt;tenancy-ocid&gt;`
+  * **Region (e.g. us-ashburn-1):** `&lt;region-identifier&gt;`
+3. Enter the following information to set up your OpenSSL API encryption keys:
+  * **Generate a new API Signing RSA key pair? [Y/n]:** Y
+  * **Directory for your keys [$HOME/.oci]:** `&lt;take-default&gt;`
+  * **Name for your key [oci_api_key]** `&lt;take-default&gt;`
+4. Deactivate the virtual environment: 
+
+    ```console
+    deactivate
+    ```
+
+The `(cli-app)` prefix in your environment is not displayed any more.
+
+&gt;Note: Your private key is `oci_api_key.pem` and your public key is `oci_api_key_public.pem`.
+{:.notice}
+
+### Add the Public Key to Your User Account.
+
+1. Activate the `cli-app` environment:
+
+
+    ```console
+    workon cli-app
+    ```
+
+2. Display the public key.
+
+    ```console
+    cat $HOME/.oci/oci_api_key_public.pem
+    ```
+
+3. Copy the public key.
+
+4. Add the public key to your user account:
+
+    * Go to the Console.
+    * Click your Profile menu (your avatar), and then click **User Settings**.
+    * Click **API Keys**.
+    * Click **Add API Key**.
+    * Click **Paste Public Key**.
+    * Paste value from previous step, including the lines with `BEGIN PUBLIC KEY` and `END PUBLIC KEY`.
+    * Click **Add**.
+
+&gt; Note:
+&gt; * Whenever you want to use the OCI CLI, activate it with: `workon cli-app`
+&gt; * When you change project names, `workon` deactivates your current working environment. This way, you can quickly switch between environments.
+{:.notice}
+
+## Set Up a Cluster
+
+Install and configure management options for your Kubernetes cluster. Later, deploy your application to this cluster.
+
+### Add Compartment Policy
+
+If your username is in the **Administrators** group, then skip this section. Otherwise, have your administrator add the following policy to your tenancy:
+
+```console    
+allow group &lt;the-group-your-username-belongs&gt; to manage compartments in tenancy
+```
+
+With this privilege, you can create a compartment for all the resources in your tutorial.
+
+### Steps to Add the Policy
+
+1. In the top navigation bar, open the **Profile** menu.
+2. Click your username.
+3. In the left pane, click Groups.
+4. In a notepad, copy the **Group Name** that your username belongs.
+5. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Policies**.
+6. Select your compartment from the **Compartment** drop-down.
+7. Click Create Policy.
+8. Fill in the following information:
+    * **Name:** `manage-compartments`
+    * **Description:** `Allow the group &lt;the-group-your-username-belongs&gt; to list, create, update, delete and recover compartments in the tenancy.`
+    * **Compartment:** `&lt;your-tenancy&gt;(root)`
+9. For **Policy Builder**, click Customize (Advanced).
+10. Paste in the following policy:
+11. allow group `&lt;the-group-your-username-belongs&gt;` to manage compartments in tenancy
+12. Click Create.
+
+**Reference:** The `compartments` resource-type in [Verbs + Resource-Type Combinations for IAM](https://docs.oracle.com/iaas/Content/Identity/Reference/iampolicyreference.htm#Identity)
+
+## Create a Compartment
+
+Create a compartment for the resources that you create in this tutorial.
+
+1. Log in to the Oracle Cloud Infrastructure **Console**.
+2. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Compartments**.
+3. Click **Create Compartment**.
+4. Fill in the following information: 
+* **Name:** `&lt;your-compartment-name&gt;`
+* **Description:** `Compartment for &lt;your-description&gt;.`
+* **Parent Compartment:** `&lt;your-tenancy&gt;(root)`
+5. Click **Create Compartment**.
+
+**Reference:** [Create a compartment](https://docs.oracle.com/iaas/Content/Identity/Tasks/managingcompartments.htm#To)
+
+## Add Resource Policy
+
+If your username is in the **Administrators** group, then skip this section. Otherwise, have your administrator add the following policy to your tenancy:
+    
+```console
+allow group &lt;the-group-your-username-belongs&gt; to manage all-resources in compartment &lt;your-compartment-name&gt;
+```
+
+With this privilege, you can **manage all resources** in your **compartment**, essentially giving you administrative rights in that compartment.
+
+### Steps to Add the Policy
+
+1. Open the navigation menu and click **Identity &amp; Security**. Under **Identity**, click **Policies**.
+2. Select your compartment from the **Compartment** drop-down.
+3. Click Create Policy.
+4. Fill in the following information:
+    * **Name:** `manage-&lt;your-compartment-name&gt;-resources`
+    * **Description:** `Allow users to list, create, update, and delete resources in &lt;your-compartment-name&gt;.`
+    * **Compartment:** `&lt;your-tenancy&gt;(root)`
+5. For **Policy Builder**, select the following choices:
+    * **Policy use cases:** `Compartment Management`
+    * **Common policy templates:** `Let compartment admins manage the compartment`
+    * **Groups:** `&lt;the-group-your-username-belongs&gt;`
+    * **Location:** `&lt;your-tenancy&gt;(root)`
+6. Click Create.
+
+**Reference:** [Common Policies](https://docs.oracle.com/iaas/Content/Identity/Concepts/commonpolicies.htm)
+
+### Create a Cluster with 'Quick Create'
+
+Create a cluster with default settings and new network resources through the 'Quick Create' workflow.
+
+1. Sign in to the Oracle Cloud Infrastructure **Console**. 
+2. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click **Kubernetes Clusters (OKE)**. 
+3. Click Create Cluster. 
+4. Select Quick Create. 
+5. Click Launch Workflow. 
+The **Create Cluster** dialog is displayed.
+6. Fill in the following information. 
+    * **Name:** `&lt;your-cluster-name&gt;`
+    * **Compartment:** `&lt;your-compartment-name&gt;`
+    * **Kubernetes Version:** `&lt;take-default&gt;`
+    * **Kubernetes API Endpoint:** Public Endpoint 
+    The Kubernetes cluster is hosted in a public subnet with an auto-assigned public IP address.
+    * **Kubernetes Worker Nodes:** Private Workers 
+    The Kubernetes worker nodes are hosted in a private subnet.
+    * **Shape:** `VM.Standard.E3.Flex`
+    * **Number of Nodes:** 3
+    * **Specify a custom boot volume size:** Clear the check box.
+7. Click **Next**. 
+All your choices are displayed. Review them to ensure that everything is configured correctly.
+8. Click **Create Cluster**. 
+The services set up for your cluster are displayed.
+9. Click **Close**. 
+10. Get a cup of coffee. It takes a few minutes for the cluster to be created. 
+You have successfully created a Kubernetes cluster.
+
+
+## Set Up Local Access to Your Cluster
+
+After you create a Kubernetes cluster, set up your local system to access the cluster.
+
+1. Sign in to the Oracle Cloud Infrastructure **Console**.
+2. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click **Kubernetes Clusters (OKE)**. 
+3. Click the link to `&lt;your-cluster&gt;`. The information about your cluster is displayed.
+4. Click **Access Cluster**. 
+5. Click **Local Access**. 
+6. Follow the steps provided in the dialog. They are reprinted here for your reference. 
+
+    &gt; Note: If you are not in your virtual environment, enter: `workon cli-app` before you run `kubectl` commands.
+    {:.notice}
+
+    Check your `oci` CLI version.
+
+    ```console
+    oci -v
+    ```
+
+    Make your `.kube` directory if it doesn't exist.
+
+    ```console
+    mkdir -p $HOME/.kube
+    ```
+
+    Create a kubeconfig file for your setup. Use the information from **Access Your Cluster** dialog.
+
+    ```console    
+    oci ce cluster create-kubeconfig &lt;use data from dialog&gt;
+    ```
+
+    Export the `KUBECONFIG` environment variable.
+
+    ```console    
+    export KUBECONFIG=$HOME/.kube/config
+    ```
+
+    &gt; Note: If you want to have the environment variable start in a new shell, then add `export KUBECONFIG=$HOME/.kube/config` to your `~/.bashrc` file.
+    {:.notice}
+
+7. Test your cluster configuration with the following commands. 
+List clusters:
+    
+    ```console    
+    kubectl get service
+    ```
+
+    Get deployment details:
+
+    ```console
+    kubectl describe deployment
+    ```
+
+    Get pods:
+
+    ```console
+    kubectl get pods
+    ```
+
+    &gt; Note: Since no application is deployed, the last two commands produce: &quot;No resources found in default namespace.&quot;
+    {:.notice}
+
+    &gt; Note: To look at a different cluster, specify a different config file on the command line. Example:
+    &gt;
+    &gt; ```console
+    &gt; kubectl --kubeconfig=&lt;/path/to/config/file&gt;
+    &gt; ```
+    {:.notice}
+
+With your cluster access set up, you are now ready to prepare your application for deployment.
+
+## Build a Local Application
+
+Build a local application and a Docker image for the application.
+
+### Create a Local Application
+
+Create your Node.js application.
+
+1. Start an OCI CLI session. 
+2. Create a directory for your application. 
+
+    ```console
+    mkdir node-hello-app
+    cd node-hello-app
+    ```
+3. Create a `package.json` file. 
+
+    Create the file:
+
+    ```console   
+    vi package.json
+    ```
+
+    In the file, input the following text, update the optional author and repository fields and then save the file:
+
+    ```json
+    {
+            &quot;name&quot;: &quot;node-hello-app&quot;,
+            &quot;version&quot;: &quot;1.0.0&quot;,
+            &quot;description&quot;: &quot;Node Express Hello application&quot;,
+            &quot;author&quot;: &quot;Example User &lt;username@example.com&gt;&quot;,
+            &quot;main&quot;: &quot;app.js&quot;,
+            &quot;scripts&quot;: {
+                &quot;start&quot;: &quot;node app.js&quot;
+            },
+            &quot;repository&quot;: {
+                &quot;type&quot;: &quot;git&quot;,
+                &quot;url&quot;: &quot;git://github.com/username/repository.git&quot;
+            },
+            &quot;dependencies&quot;: {
+                &quot;express&quot;: &quot;^4.0.0&quot;
+            },
+            &quot;license&quot;: &quot;UPL-1.0&quot;
+    }          
+    ```  
+4. Install the NPM packages. 
+
+    ```console
+    npm install
+    ```
+5. Create a &quot;Hello, World!&quot; application. 
+
+    Create the file:
+
+    ```console   
+    vi app.js
+    ```
+
+    In the file, input the following text and save the file:
+
+    ```javascript
+    const express = require('express')
+    const app = express()
+    port = 3000
+    
+    app.get('/', function (req, res) {
+        res.send('&lt;h1&gt;Hello World from Node.js!&lt;/h1&gt;')
+    })
+    
+    app.listen(port, function() {
+        console.log('Hello World app listening on port ' + port);
+    })
+    ```                      
+
+You have successfully set up your Node.js app.
+
+## Run the Local Application
+
+1. Run your Node.js application. 
+
+    ```console
+    node app.js
+    ```
+
+    The Node Express server starts and displays: 
+
+    ```console
+        Hello World app listening on port 3000
+    ```
+
+2. Test the application using `curl` or your browser.
+    * To test with `curl`, enter: 
+    
+        ```console
+        curl -X GET http://localhost:3000
+        ```
+
+    * To test with your browser, connect a browser window to: `http://&lt;your-ip-address&gt;:3000` (Optional).
+
+        The app returns 
+
+        ```html
+        &lt;h1&gt;Hello World from Node.js!&lt;/h1&gt;
+        ```
+
+3. Stop the running application. 
+
+Press **Ctrl+C** to stop your application in the terminal window you started with.
+
+You have successfully created a Hello World application using Node.js and Express.
+
+**References:**
+
+  * For detailed information on this example, see [Getting Started with Express](https://expressjs.com/en/starter/hello-world.html).
+
+## Build a Docker Image
+
+Next, create a Docker image for your Node.js Express application.
+
+1. Ensure you are in the `node-hello-app` directory.
+
+2. Build a Docker image. 
+
+    ```console
+    docker build -t node-hello-app .
+    ```
+
+    You get a success message.
+
+    ```console  
+    [INFO] BUILD SUCCESS
+    Successfully tagged node-hello-app:latest
+    ```
+
+3. Run the Docker image: 
+
+    ```console
+    docker run --rm -p 3000:3000 node-hello-app:latest
+    ```
+
+4. Test the application. 
+
+    ```console
+    curl -X GET http://localhost:3000
+    ```
+
+    The app returns:
+
+    ```html
+    &lt;h1&gt;Hello World from Node.js!&lt;/h1&gt;
+    ```
+
+5. Stop the running application. 
+
+Congratulations! You have successfully created a Node.js Express image.
+
+## Deploy Your Docker Image
+
+Push your Node.js Express image to OCI Container Registry. Then use the image to deploy your application.
+
+### Create a Docker Repository
+
+1. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click **Container Registry**. 
+2. In the left navigation, select `&lt;your-compartment-name&gt;`. 
+3. Click Create Repository. 
+4. Create a **private repository** with your choice of repo name: 
+
+    ```console   
+    &lt;repo-name&gt; = &lt;image-path-name&gt;/&lt;image-name&gt;
+    ```
+
+    Example: `node-apps/node-hello-app`
+
+You are now ready to push your local image to Container Registry.
+
+&gt; Note: Before you can push a Docker image into a registry repository, **the repository must exist in your compartment**. If the repository does not exist, the Docker push command does not work correctly.
+{:.notice}
+
+&gt; Note: The slash in a repository name **does not represent a hierarchical directory structure**. The optional `&lt;image-path-name&gt;` helps to organize your repositories.
+{:.notice}
+
+## Push Your Local Image
+
+With your local Docker image created, push the image to the Container Registry.
+
+Follow these steps.
+
+1. Open your OCI CLI session. 
+2. Log in to OCI Container Registry: 
+
+    ```console
+    docker login &lt;region-key&gt;.ocir.io
+    ```
+
+    You are prompted for your login name and password.
+
+    * **Username:** `&lt;tenancy-namespace&gt;/&lt;user-name&gt;`
+    * **Password:** `&lt;auth-token&gt;`
+
+3. List your local Docker images: 
+
+    ```console
+    docker images
+    ```
+The Docker images on your system are displayed. Identify the image you created in the last section: `node-hello-app`
+
+4. **Tag** your local image with the **URL for the registry** plus the **repo name**, so you can push it to that repo. 
+
+    ```console 
+        docker tag &lt;your-local-image&gt; &lt;repo-url&gt;/&lt;repo-name&gt;
+    ```
+
+    * Replace **`&lt;repo-url&gt;`** with: 
+    `&lt;region-key&gt;.ocir.io/&lt;tenancy-namespace&gt;/`
+
+    * Replace **`&lt;repo-name&gt;`** with: 
+    `&lt;image-folder-name&gt;/&lt;image-name&gt;` from the **Create a Docker Repository** section.
+
+    * Here is an example after combining both:
+
+    ```console
+    docker tag node-hello-app iad.ocir.io/my-namespace/node-apps/node-hello-app
+    ```
+
+    In this example, the components are:
+
+    * **Repo URL:** `iad.ocir.io/my-namespace/`
+    * **Repo name:** `node-apps/node-hello-app`
+
+    &gt; Note: OCI Container Registry now supports creating a registry repo in any compartment rather than only in the root compartment (tenancy). To push the image to the repo you created, combine the registry URL with the exact repo name. OCI Container Registry matches based on the unique repo name and pushes your image.
+    {:.notice}
+
+
+5. Check your Docker images to see if the image is **copied**. 
+
+    ```console
+    docker images
+    ```
+
+    * The tagged image has **the same image ID** as your local image.
+    * The tagged image name is: `&lt;region-key&gt;.ocir.io/&lt;tenancy-namespace&gt;/&lt;image-path-name&gt;/&lt;image-name&gt;`
+
+
+6. Push the image to Container Registry. 
+
+    ```console
+    docker push &lt;copied-image-name&gt;:latest
+    ```
+
+    Example:
+
+    ```console
+    docker push iad.ocir.io/my-namespace/node-apps/node-hello-app:latest
+    ```
+
+7. Open the navigation menu and click **Developer Services**. Under **Containers &amp; Artifacts**, click **Container Registry**. 
+
+Find your image in Container Registry after the push command is complete.
+
+## Deploy the Image
+
+With your image in Container Registry, you can now deploy your image and app.
+
+1. Create a registry secret for your application. This secret authenticates your image when you deploy it to your cluster. 
+
+    To create your secret, fill in the information in this template .
+
+    ```console
+    kubectl create secret docker-registry ocirsecret --docker-server=&lt;region-key&gt;.ocir.io  --docker-username='&lt;tenancy-namespace&gt;/&lt;user-name&gt;' --docker-password='&lt;auth-token&gt;'  --docker-email='&lt;email-address&gt;'
+    ```
+
+    After the command runs, you get a message similar to: `secret/ocirsecret created`.
+
+2. Verify that the secret is created. Issue the following command: 
+
+    ```console
+    kubectl get secret ocirsecret --output=yaml
+    ```
+
+    The output includes information about your secret in the yaml format.
+
+3. Determine the host URL to your registry image using the following template: 
+
+    ```console
+    &lt;region-code&gt;.ocir.io/&lt;tenancy-namespace&gt;/&lt;repo-name&gt;/&lt;image-name&gt;:&lt;tag&gt;
+    ```
+
+    Example:
+
+    ```console
+    iad.ocir.io/my-namespace/node-apps/node-hello-app:latest
+    ```
+
+4. On your system, create a file called `node-app.yaml` with the following text: 
+
+    Replace the following place holders:
+
+    * `&lt;your-image-url&gt;`
+    * `&lt;your-secret-name&gt;`
+
+    ```yaml
+    apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: node-app
+        spec:
+          selector:
+            matchLabels:
+              app: app
+          replicas: 3
+          template:
+            metadata:
+              labels:
+                app: app
+            spec:
+              containers:
+              - name: app
+                image: &lt;your-image-url&gt;
+                imagePullPolicy: Always
+                ports:
+                - name: app
+                  containerPort: 3000
+                  protocol: TCP
+              imagePullSecrets:
+                - name: &lt;your-secret-name&gt;
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: node-app-lb
+          labels:
+            app: app
+          annotations:
+            service.beta.kubernetes.io/oci-load-balancer-shape: &quot;flexible&quot;
+            service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: &quot;10&quot;
+            service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: &quot;100&quot;
+        spec:
+          type: LoadBalancer
+          ports:
+          - port: 3000
+          selector:
+            app: app
+    ```
+
+5. Deploy your application with the following command. 
+
+    ```console    
+    kubectl create -f node-app.yaml
+    ```
+
+    Output: 
+
+    ```console
+    deployment.apps/node-app created
+    service/node-app-lb created
+    ```
+
+&gt; Note: In the `node-app.yaml` file, the code after the dashes adds a flexible load balancer.
+{:.notice}
+
+## Test Your App
+
+After you deploy your app, it might take the load balancer a few seconds to load.
+
+1. Check if the load balancer is live: 
+
+    ```console
+    kubectl get service
+    ```
+
+    Repeat the command until load balancer is assigned an IP address.
+
+    &gt; **Note:** While waiting for the load balancer to deploy, you can check the status of your cluster with these commands: 
+    &gt;
+    &gt; * Get each pods status: `kubectl get pods`
+    &gt; * Get app status: `kubectl get deployment`
+    {:.notice}
+
+2. Use the load balancer IP address to connect to your app in a browser:
+
+    ```console
+    http://&lt;load-balancer-IP-address&gt;:3000
+    ```
+
+    The browser displays: `&lt;h1&gt;Hello World from Node.js!&lt;/h1&gt;`
+
+3. Undeploy your application from the cluster. **(Optional)** To remove your application run this command: 
+
+    ```console
+    kubectl delete -f node-app.yaml
+    ```
+
+    Output:
+
+    ```console
+    deployment.apps/node-app deleted
+    service &quot;node-app-lb&quot; deleted
+    ```
+
+    Your application is now removed from your cluster.
+
+## What's Next
+
+You have successfully created a Hello World application, deployed it to a Kubernetes cluster and made it accessible on the internet, using the Node Express framework.
+
+Check out these sites to explore more information about development with Oracle products:
+
+  * [Oracle Developers Portal](https://developer.oracle.com/)
+  * [Oracle Cloud Infrastructure](https://www.oracle.com/cloud/)</content><author><name>Oracle Developer Community</name></author><category term="OCI" /><category term="open-source" /><category term="nodejs" /><category term="front-end" /><category term="kubernetes" /></entry><entry><title type="html">How to Deploy Spark Standalone in Oracle Cloud (OCI)</title><link href="https://cool.devo.build/collections/tutorials/how-to-deploy-spark-oci" rel="alternate" type="text/html" title="How to Deploy Spark Standalone in Oracle Cloud (OCI)" /><published>2021-09-30T01:00:00+00:00</published><updated>2021-09-30T01:00:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/how-to-deploy-spark-oci">The following walk-through guides you through the steps needed to set up your environment to run Spark and Hadoop in Oracle Cloud Infrastructure.
+
+## Prerequisites
+
+You have deployed a VM 2.1 or + with Oracle Linux 7.9 (OEL7) in Oracle Cloud Infrastructure (OCI).
+
+* The installation of Oracle Linux 7.9 is using a JVM by default.
+* You have access to root either directly or via sudo. By default in OCI, you are connected like &quot;opc&quot; user with sudo privilege.
+
+```console
+    [opc@xxx ~]$ java -version
+    java version &quot;1.8.0_281&quot;
+    Java(TM) SE Runtime Environment (build 1.8.0_281-b09)
+    Java HotSpot(TM) 64-Bit Server VM (build 25.281-b09, mixed mode)
+```
+
+## Java Installation
+
+The install is quite simple. It consists of setting up Java, installing Spark and Hadoop components and libraries. Lets start with setting up the Spark and Hadoop environment.
+
+Download the last version of JDK 1.8 because Hadoop 2.X is using this Java version.
+```console
+rpm -ivh /home/opc/jdk-8u271-linux-x64.rpm
+```
+
+Check Java Version.
+```console
+java -version
+```
+
+## Spark and Hadoop Setup
+
+The next step is to install Spark and Hadoop environment.
+
+First, choose the version of Spark and Hadoop you want to install. Then, download the version you want to install:
+
+### Download Spark 2.4.5 for Hadoop 2.7
+```console 
+cd /home/opc
+wget http://apache.uvigo.es/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
+```
+
+### Download Spark 2.4.7 for Hadoop 2.7
+```console
+wget http://apache.uvigo.es/spark/spark-2.4.7/spark-2.4.7-bin-hadoop2.7.tgz
+```
+
+### Download Spark 3.1.1 for Hadoop 3.2
+```console
+wget http://apache.uvigo.es/spark/spark-3.1.1/spark-3.1.1-bin-hadoop3.2.tgz
+```
+
+### Install the Spark and Hadoop Version
+
+Install the Spark and Hadoop Version choosen in the directory &quot;/opt&quot;.
+```console
+sudo -i
+cd /opt
+tar -zxvf /home/opc/spark-2.4.5-bin-hadoop2.7.tgz
+#or 
+tar -zxvf /home/opc/spark-2.4.7-bin-hadoop2.7.tgz
+#or
+tar -zxvf /home/opc/spark-3.1.1-bin-hadoop3.2.tgz
+```
+
+## Install PySpark in Python3 environment
+```console 
+/opt/Python-3.7.6/bin/pip3 install 'pyspark=2.4.7'
+/opt/Python-3.7.6/bin/pip3 install findspark
+```
+
+Next we shall create a virtual environment and enable it.
+
+### Modify your environment to use this Spark and Hadoop Version
+
+Add to &quot;.bashrc&quot; for the user &quot;opc&quot; the following lines:
+```console
+# Add by %OP%
+export PYTHONHOME=/opt/anaconda3
+export PATH=$PYTHONHOME/bin:$PYTHONHOME/condabin:$PATH
+
+# SPARK ENV
+#export JAVA_HOME=$(/usr/libexec/java_home)
+export SPARK_HOME=/opt/spark-2.4.5-bin-hadoop2.7
+export PATH=$SPARK_HOME/bin:$PATH
+export PYSPARK_PYTHON=python3
+
+export PYSPARK_DRIVER_PYTHON=jupyter
+export PYSPARK_DRIVER_PYTHON_OPTS='notebook'
+```
+
+## Test your Spark and Hadoop Environment
+
+If you're running directly on a virtual machine and have a browser installed it should take you directly into the jupyter environment. Connect to your &quot;[http://xxx.xxx.xxx.xxx:8001/](http://xxx.xxx.xxx.xxx:8001/)&quot;.
+
+And upload the next notebooks:
+
+* [Notebook test findspark](https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test_findSpark.ipynb).
+* [Notebook test Pyspark](https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test%20PySpark.ipynb).
+* [Notebook test Pyspark with Mysql](https://github.com/operard/oracle-cloud-tutorial/blob/main/notebooks/Test_PySpark_Mysql.ipynb).</content><author><name>Olivier Francois Xavier Perard</name></author><category term="oci" /><category term="open-source" /><category term="spark" /><category term="java" /><category term="data-science" /></entry><entry><title type="html">Why Infrastructure as Code?</title><link href="https://cool.devo.build/collections/tutorials/tf-101/1-why-iac" rel="alternate" type="text/html" title="Why Infrastructure as Code?" /><published>2021-09-28T08:13:00+00:00</published><updated>2021-09-28T08:13:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/tf-101/1-why-iac">Terraform.  Infrastructure-as-Code (IaC).  Automation.  DevOps.  DevSecOps.  So many buzz words are floating around... what's the big deal anyway?  There are lots of different ways to manage IT resources and cloud infrastructure.  What makes Terraform so great?  Why should you care about IaC?  IaC might not be for everyone, but it is for *almost* everyone.
+
+## So Many Ways to Manage
+
+Let's start with the basics.  When there are IT resources to manage, what are some of our common options?
+
+* GUI (aka Console)
+* Command-Line Interface (CLI)
+* API
+* IaC tools
+
+### GUIs
+
+Most of us start with the GUI.  In Oracle Cloud Infrastructure (OCI) this is the [OCI Console](https://www.oracle.com/cloud/sign-in.html).  GUIs are typically pretty fancy, fun, and easy to use.  While they can be entertaining and great for initially learning a system/platform, they're not always the most scalable or efficient.  UIs require time and manual user intervention (unless you're using something to automate the pointing-and-clicking, such as [Selenium](https://www.selenium.dev), but that's a pretty niche edge case).  Things only &quot;work&quot; when someone's there to click a button.  It's difficult (read: *impossible*) to rapidly manage resources using a UI.  Just the time it takes to point-and-click, plus wait for the browser to update... it's not super fast.
+
+Another downside to consider with GUIs is that it's a bit more difficult to roll back should something go sideways.  Rolling back typically involves lots of pointing-and-clicking, undoing the changes that were previously made.  More time and human involvement.  Yeck.  Great for learning and playing around, but certainly not ideal for maintaining anything beyond a lab/sandbox environment.
+
+### CLIs
+
+CLIs are marginally better than a GUI.  Instead of pointing-and-clicking, commands are issued.  CLIs are really a text user interface.  Most CLIs allow for running &quot;headless&quot;, meaning they do not require user input (all input can be provided at runtime).  One benefit here is that it's easier to use CLIs with automated workflows.  It's a step in the right direction.  Unless there's some sort of scripting (shell scripts, Ruby, Python, etc.) used, it's impossible to embed any sort of logic when using CLIs.  This means that it's great to send a single command (or even a string of commands), however it can be difficult to maintain a high level of assurance when using CLIs (without more involved scripting logic being used with the CLI).
+
+### APIs
+
+Who doesn't love APIs?  At the end of the day, almost everything interacts with the underlying APIs.  Most GUIs, CLIs, and even IaC tools interact with APIs to do what they do.  Whether you use curl, [Postman](https://www.postman.com), [Paw](https://paw.cloud), or other tools, you're typically interacting with a single API endpoint.  There's still an inherent lack of logic (unless you use some sort of scripting/application to add this).
+
+Many of us have written small scripts/apps that interact with APIs to achieve certain outcomes.  This is terrific, but it's pretty manually intensive to create.  For many of us, it takes a short bit to custom-build a script/app for each type of management need.  While this gives an extreme amount of customizability (the sky's the limit with what you can do), it's really not practical or scalable.
+
+All cloud providers present an API for managing the platform.  OCI is no exception, providing a terrific [API interface](https://docs.oracle.com/en-us/iaas/api/) for developers and users to utilize when interacting with OCI.  It's certainly one option.  There are other tools such as [Upbound](https://www.upbound.io) that offer a great twist for having a single interface managing multiple backend interfaces.
+
+### IaC Tools
+
+These are tools that are designed from the ground-up to manage infrastructure resources using code.  Resources are defined in code, with the tool itself providing the necessary structure and logic to quickly and easily build a definition of what you need/want an environment to be.  The basic &quot;scaffolding&quot; (logic elements, API interactions, etc.) are all abstracted, allowing you to focus on describing the resources you need/want to exist in the environment.
+
+This is by far one of the easiest and fastest ways to build and maintain cloud environments.  This isn't limited to cloud - on-premesis resources can often be managed with IaC tools.  Are you using multiple cloud providers?  Even more reason to utilize IaC in managing your IT infrastructure.
+
+With IaC, we're often using git on the back-end, allowing us to get a great history of changes (which can also allow for easy and rapid rollbacks).  Using git for storing the code definitions, we're able to use pretty standard processes and tools to monitor/approve/manage changes before they're made.  Whether using policy-as-code (such as [Open Policy Agent](https://www.openpolicyagent.org), with implementations such as [Policy-as-Code on OCI using Open Policy Agent](https://github.com/oracle-devrel/oci-pac-opa)) or a manual pull request (PR)/merge request (MR) review process, you can have a really solid review/approval/compliance mechanism (not to mention yet another audit trail that's separate from the cloud/platform itself).
+
+One of the most common and popular IaC tools is [HashiCorp Terraform](https://www.terraform.io), with other tools (such as [Pulumi](https://www.pulumi.com)) also being available.  The end goal with these tools is to manage infrastructure programmatically.
+
+Some like to use tools that are predominantly in the realm of configuration management (such as [Ansible](https://www.ansible.com), [Chef](https://www.chef.io)/[Cinc](https://cinc.sh), etc.  These are certainly options for managing infrastructure, but you may be better off with tools that focus on *infrastructure management* (and less about *configuration management*).  OCI is no exception in supporting many of these different platforms.
+
+In the rest of this series, we're going to target using Terraform to manage OCI infrastructure.  Why Terraform?  It's fairly mature at this point, widely adopted and has support for a wide variety of platforms.  Many cloud platforms (including OCI) and IT systems support using Terraform to manage resources.  There are plenty of examples, platforms and strong user support for it, making it an ideal tool.  Terraform is targeted at managing infrastructure, not so much the configuration management side of things.  And it's super powerful when combined with a traditional configuration management tool like Ansible.
+
+This series will take you through how to harness the power of infrastructure-as-code (IaC) in your environment.  If this is your first time using Terraform, you're a bit rusty, or you're just looking to fill any potential gaps in your knowledge, this should be a worthwhile time investment.  It's fairly short, but will take you through the basics of how Terraform works, then into an actual working example.  During the journey, you'll find several key resources which you'll find invaluable as you continue to work with Terraform to manage your OCI environment.
+
+A picture is worth a thousand words.  Going through this tutorial, you'll be able to better understand why IaC is so cool and has gained so much traction.  You'll also learn how to harness IaC to improve the efficiency of managing your environment, and that alone is worth the time.
+
+Until our next lesson, happy coding!  Take a look at the [next lesson](2-experiencing-terraform) to go through a very quick experience in using Terraform.  From there we'll dive into several aspects of how Terraform works.</content><author><name>Tim Clegg</name></author><category term="iac" /><category term="opensource" /><category term="open-source" /><category term="terraform" /><category term="iac" /><category term="devops" /><category term="beginner" /></entry><entry><title type="html">Deploying the Argo CD on Oracle Container Engine for Kubernetes (OKE)</title><link href="https://cool.devo.build/collections/tutorials/deploying-the-argo-project-on-oke" rel="alternate" type="text/html" title="Deploying the Argo CD on Oracle Container Engine for Kubernetes (OKE)" /><published>2021-09-22T15:30:00+00:00</published><updated>2021-09-22T15:30:00+00:00</updated><id>https://cool.devo.build/</id><content type="html" xml:base="https://cool.devo.build/collections/tutorials/deploying-the-argo-project-on-oke">I was quite thrilled to learn that the [Argo Project](https://argoproj.github.io/) was [accepted as incubator-level](https://www.cncf.io/blog/2020/04/07/toc-welcomes-argo-into-the-cncf-incubator/) project in CNCF's stack.
+
+As a brief introduction, the Argo Project has 4 main components:
+
+* [Argo Workflows](https://argoproj.github.io/projects/argo/): a native workflow engine to orchestrate parallel jobs on Kubernetes
+* [Argo CD](https://argoproj.github.io/projects/argo-cd/): a declarative, GitOps continuous delivery tool for Kubernetes
+* [Argo Rollouts](https://argoproj.github.io/argo-rollouts/): provides additional deployment strategies such as Blue-Green and Canary to Kubernetes
+* [Argo Events](https://argoproj.github.io/projects/argo-events/): provides an event-based dependency manager for Kubernetes
+
+So without wasting any time, let's take Argo CD for a spin and [I'll be your Huckleberry](https://www.youtube.com/watch?v=R8OWNspU_yE).
+
+## Creating a test OKE cluster for Argo
+
+Clone the [terraform-oci-oke repo](https://github.com/oracle-terraform-modules/terraform-oci-oke/blob/master/docs/quickstart.adoc#provisioning-using-this-git-repo) or [use the published terraform OKE module ](https://github.com/oracle-terraform-modules/terraform-oci-oke/blob/master/docs/quickstart.adoc#provisioning-using-the-hashicorp-registry-module) on the [Terraform registry](https://registry.terraform.io/modules/oracle-terraform-modules/oke/oci/latest) to create an OKE Cluster. You can also use [the Quick Create ](https://docs.cloud.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengcreatingclusterusingoke.htm#create-quick-cluster) feature to create your cluster if you don't want to use terraform.
+
+Ensure you use the following parameters in your terraform.tfvars:
+
+```tf
+label_prefix = &quot;argo&quot;
+region = &quot;us-phoenix-1&quot;
+
+vcn_dns_label = &quot;oke&quot;
+vcn_name = &quot;oke&quot;
+
+create_bastion_host = true
+
+create_operator              = true
+admin_instance_principal     = true
+control_plane_type           = &quot;private&quot;
+
+node_pools = {
+  np1 = { shape = &quot;VM.Standard.E4.Flex&quot;, ocpus = 1, memory = 16, node_pool_size = 2, boot_volume_size = 150 }
+}
+```
+
+```console
+$ terraform init  
+$ terraform apply -auto-approve
+```
+
+Once Terraform has finished, ssh to the operator by copying the ssh command from the output e.g. :
+
+```console
+$ ssh -i ~/.ssh/id_rsa -J opc@XXX.XXX.XXX.XXX opc@10.0.1.10
+```
+
+## Argo CD
+
+[Argo CD](https://argoproj.github.io/projects/argo-cd/) is a declarative, GitOps continuous delivery tool for Kubernetes. This says a lot without being too wordy. When you look at the user guide and features, this brief description probably undersells Argo CD.
+
+Let's follow Argo CD's [getting started guide](https://argoproj.github.io/argo-cd/getting_started/):
+
+```
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+Download and install the Argo CD cli:
+
+```console
+$ curl -sLO https://github.com/argoproj/argo-cd/releases/download/v2.1.3/argocd-linux-amd64
+$ chmod +x argocd-linux-amd64
+$ sudo mv argocd-linux-amd64 /usr/local/bin/argocd
+```
+
+Let's use port-forwarding to access the UI. First, we establish an SSH tunnel to operator:
+
+```
+ssh -L 8080:localhost:8080 -i ~/.ssh/id_rsa -J opc@&lt;bastion_public_ip&gt; opc@&lt;operator_private_ip&gt;
+```
+
+Then we port-forward to the ArgoCD service:
+
+```
+kubectl port-forward --address 0.0.0.0 svc/argocd-server -n argocd 8080:443
+```
+
+We can now access the ArgoCD UI in our browser at https://localhost:8080/
+
+Or we can change the service type to Load Balancer and use the IP Address of the Load Balancer to access the UI:
+
+```console
+$ kubectl patch svc argocd-server -n argocd -p '{&quot;spec&quot;: {&quot;type&quot;: &quot;LoadBalancer&quot;}}'
+```
+
+We will be warned of a potential security risk. That's because we didn't install certificates etc. We can do that later by using [Let's Encrypt](https://letsencrypt.org/) and [cert-manager](https://cert-manager.io/) and then use this together with an [Ingress Controller](https://medium.com/oracledevs/experimenting-with-ingress-controllers-on-oracle-container-engine-oke-part-1-5af51e6cdb85) like the [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/). Make sure you read Argo's [documentation on using Ingress](https://argoproj.github.io/argo-cd/operator-manual/ingress/). But we are in a hurry, so we'll just skip these and click 'Advanced' &gt; 'Accept the Risk and Continue'.
+
+The ArgoCD login page will appear and we need the password: 
+
+```
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=&quot;{.data.password}&quot; | base64 -d
+```
+
+Login with username `admin` and the password above.
+
+Since we didn't add the certificate, we'll be warned of potential security risks ahead. To solve this, we can add a certificate using  Again, we're in a bit of a hurry, so we'll just skip these and click 'Accept the Risk and Continue'.
+
+We'll now be redirected to Argo CD login page. Let's retrieve the generated password:
+    
+```console
+$ kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2
+```
+
+and login with username admin and the retrieved password.
+
+
+
+Follow the rest of the instructions in [creating apps via UI](https://argoproj.github.io/argo-cd/getting_started/#creating-apps-via-ui). Once the application is created, click on 'Sync' and watch the application being deployed as Kubernetes works its way to creating the various resources (deployment, service, ReplicaSet, pods, etc).
+
+
+
+Once the application is deployed, take a moment to poke around the Argo UI and the Kubernetes resources. Select the guestbook-ui service and click 'Edit'. Change the service type from ClusterIP to LoadBalancer and then save. Once the OCI Load Balancer is provisioned, its public IP address appears. Awesome stuff. I pinch myself and make a quick check on OCI Console to verify the Load Balancer IP just to ensure I'm not imagining this. Nope, I'm not.
+
+From here, you can experiment with other applications such as the sock-shop or using other tools such as [helm ](https://helm.sh/)or [kustomize](https://kustomize.io/). You can find more examples in this [example apps repo](https://github.com/argoproj/argocd-example-apps).
+
+## Argo Rollouts
+
+Argo Rollouts provides additional deployment strategies such as Blue-Green and Canary to Kubernetes. Let's dive right into it and follow Rollouts' [getting started guide](https://argoproj.github.io/argo-rollouts/getting-started/) to do a blue-green deployment:
+
+```console
+kubectl create namespace argo-rollouts
+kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+```
+
+Let's first install the Argo Rollouts kubectl plugin:
+
+```
+curl -LO  https://github.com/argoproj/argo-rollouts/releases/download/v1.0.7/kubectl-argo-rollouts-linux-amd64
+chmod +x kubectl-argo-rollouts-linux-amd64
+sudo mv kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+```
+
+Let's test the plugin:
+
+```
+ kubectl argo rollouts version
+```
+
+Switching from the default Kubernetes [Deployment to Rollout](https://argoproj.github.io/argo-rollouts/getting-started/#converting-deployment-to-rollout) is very easy:
+
+1. Change the apiVersion from apps/v1 to argoproj.io/v1alpha1
+2. Change the kind from Deployment to Rollout
+3. Add a deployment strategy to the Rollout object
+
+Create a bluegreen.yaml file (copied from the Argo CD documentation and example) on the operator host:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollout-bluegreen
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: rollout-bluegreen
+  template:
+    metadata:
+      labels:
+        app: rollout-bluegreen
+    spec:
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:blue
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+  strategy:
+    blueGreen: 
+      # activeService specifies the service to update with the new template hash at time of promotion.
+      # This field is mandatory for the blueGreen update strategy.
+      activeService: rollout-bluegreen-active
+      # previewService specifies the service to update with the new template hash before promotion.
+      # This allows the preview stack to be reachable without serving production traffic.
+      # This field is optional.
+      previewService: rollout-bluegreen-preview
+      # autoPromotionEnabled disables automated promotion of the new stack by pausing the rollout
+      # immediately before the promotion. If omitted, the default behavior is to promote the new
+      # stack as soon as the ReplicaSet are completely ready/available.
+      # Rollouts can be resumed using: `kubectl argo rollouts promote ROLLOUT`
+      autoPromotionEnabled: false
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: rollout-bluegreen-active
+spec:
+  type: LoadBalancer
+  selector:
+    app: rollout-bluegreen
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: rollout-bluegreen-preview
+spec:
+  type: LoadBalancer
+  selector:
+    app: rollout-bluegreen
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+```
+
+and let's deploy it:
+
+```console
+$ kubectl apply -f bluegreen.yaml
+```
+
+Verify that we have 2 pods created:
+
+```console
+kubectl get pods 
+```
+
+Let's list the ReplicaSet:
+
+```
+NAME                                  DESIRED   CURRENT   READY   AGE   CONTAINERS       IMAGES                                       SELECTOR
+rollout-bluegreen-6565b74f44          1         1         1       83s   rollouts-demo    argoproj/rollouts-demo:blue                  app=rollout-bluegreen,rollouts-pod-template-hash=6565b74f44
+```
+We can see that the image deployed is of the `blue` variety. Similarly, if get Argo Rollouts to print thing for us:
+
+```
+kubectl argo rollouts get rollout rollout-bluegreen -w
+
+Name:            rollout-bluegreen
+Namespace:       default
+Status:          ✔ Healthy
+Strategy:        BlueGreen
+Images:          argoproj/rollouts-demo:blue (stable, active)
+Replicas:
+  Desired:       2
+  Current:       2
+  Updated:       2
+  Ready:         2
+  Available:     2
+
+NAME                                           KIND        STATUS     AGE    INFO
+⟳ rollout-bluegreen                            Rollout     ✔ Healthy  21m
+└──# revision:1
+   └──⧉ rollout-bluegreen-6565b74f44           ReplicaSet  ✔ Healthy  20m    stable,active
+      ├──□ rollout-bluegreen-6565b74f44-qps4m  Pod         ✔ Running  19m    ready:1/1
+      └──□ rollout-bluegreen-6565b74f44-twx2x  Pod         ✔ Running  4m19s  ready:1/1
+```
+
+We can also use the Argo Rollouts dashboard to visualize things. If you're logged in the operator host, exit and login again:
+
+```
+ssh -L 3100:localhost:3100 -i ~/.ssh/id_rsa -J opc@132.226.28.30 opc@10.0.0.14
+```
+
+Then, run the following command to access the dashboard:
+
+```
+kubectl argo rollouts dashboard
+```
+
+And use the browser to access the Rollout dashboards:
+
+
+
+Finally, since we deployed both services as `type=LoadBalancer`, we will have 2 Load Balancers. You can look up their respective public IP addresses in the OCI console or use kubectl to look them up in the EXTERNAL-IP column when you run:
+
+```
+kubectl get svc 
+```
+
+Use you browser to access them:
+
+
+
+Both the active and preview will be blue. 
+
+Let's now patch to upgrade from blue to green:
+
+```
+kubectl patch rollout rollout-bluegreen --type merge -p '{&quot;spec&quot;: {&quot;template&quot;: { &quot;spec&quot;: { &quot;containers&quot;: [{&quot;name&quot;: &quot;rollouts-demo&quot;,&quot;image&quot;: &quot;argoproj/rollouts-demo:green&quot;}]}}}}'
+```
+
+And we can see effect immediately:
+
+
+
+And if we access the preview and active Load Balancers, we'll see the preview is green and active is still blue.
+
+
+
+Let's give the rollout a promotion. We can use command line as thus:
+
+```console
+  $ kubectl promote rollout-bluegreen
+```
+
+or if you have Argo Rollouts Dashboard still open, you can use that too.
+
+
+
+If we now access both load balancers, they'll both show up as green. You can keep switching between them to simulate upgrading to newer versions of your application.
+
+I'll pause here and leave Argo Events for a future post. For now, I hope this shows you that if you were considering running the Argo project on your Kubernetes cluster, OKE will work quite nicely with it.
+
+N.B. This article was originally posted on https://medium.com/oracledevs/deploying-the-argo-project-on-oke-ee96cabf8910. It has been updated to focus on ArgoCD and Rollouts and also to reflect the changes in the terraform-oci-oke project.</content><author><name>Ali Mukadam</name></author><category term="cloudapps" /><category term="opensource" /><category term="open-source" /><category term="oke" /><category term="kubernetes" /><category term="terraform" /><category term="devops" /></entry></feed>
